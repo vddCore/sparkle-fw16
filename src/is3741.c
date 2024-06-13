@@ -22,7 +22,7 @@ typedef struct is3741_state
 
 is3741_err_t is3741_init(uint8_t i2c_address, is3741_state_t** out_state)
 {
-    is3741_state_t* new_state = (is3741_state_t*)malloc(sizeof(is3741_state_t));
+    is3741_state_t* new_state = (is3741_state_t*)calloc(1, sizeof(is3741_state_t));
 
     if (!new_state)
     {
