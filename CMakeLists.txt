@@ -19,7 +19,11 @@ add_compile_options(-Wall
 )
 
 # add_compile_definitions(SPARKLE_USE_EVT_LUT)
-add_compile_definitions(SPARKLE_ENABLE_LOGGING)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug"
+OR  CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_definitions(SPARKLE_ENABLE_LOGGING)
+endif ()
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
