@@ -25,6 +25,7 @@ typedef struct sparkle_context
 {
     uint32_t i2c_baudrate;
     is3741_state_t* is3741;
+    char command_buffer[256];
 } sparkle_context_t;
 
 sparkle_context_t* sparkle_init(void);

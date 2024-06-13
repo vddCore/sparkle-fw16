@@ -9,7 +9,6 @@
 #include "sparkle.h"
 #include "is3741.h"
 #include "log.h"
-#include "serial.h"
 
 static void sparkle_gpio_init(sparkle_context_t* context)
 {
@@ -128,8 +127,6 @@ _Noreturn void sparkle_main(sparkle_context_t* sparkle)
 
     while (true)
     {
-        serial_poll(sparkle);
-        
         sleep_us(1);
     }
 }

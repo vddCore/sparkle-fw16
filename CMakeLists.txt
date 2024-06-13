@@ -11,14 +11,13 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
+set(SKIP_PICO_STDIO_USB 1)
 pico_sdk_init()
 
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
         -Wno-unused-function # we have some for the docs that aren't called
 )
-
-# add_compile_definitions(SPARKLE_USE_EVT_LUT)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug"
 OR  CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
