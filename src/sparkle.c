@@ -10,12 +10,12 @@
 #include "is3741.h"
 #include "log.h"
 
-void sparkle_gpio_init(sparkle_context_t* context)
+static void sparkle_gpio_init(sparkle_context_t* context)
 {
     gpio_set_function(SPARKLE_GPIO_SDB, GPIO_FUNC_SIO);
-    gpio_set_dir(SPARKLE_GPIO_SDB, true);
     gpio_set_outover(SPARKLE_GPIO_SDB, GPIO_OVERRIDE_HIGH);
     gpio_set_oeover(SPARKLE_GPIO_SDB, GPIO_OVERRIDE_HIGH);
+    gpio_set_dir(SPARKLE_GPIO_SDB, true);
     gpio_put(SPARKLE_GPIO_SDB, true);
 
     gpio_set_function(SPARKLE_GPIO_SLEEP, GPIO_FUNC_SIO);
@@ -29,7 +29,7 @@ void sparkle_gpio_init(sparkle_context_t* context)
     gpio_set_dir(SPARKLE_GPIO_INTB, false);
 }
 
-void sparkle_i2c_init(sparkle_context_t* context)
+static void sparkle_i2c_init(sparkle_context_t* context)
 {
     context->i2c_baudrate = i2c_init(SPARKLE_I2C_INSTANCE, IS3741_I2C_FREQ);
 
@@ -125,15 +125,9 @@ _Noreturn void sparkle_main(sparkle_context_t* context)
     log_info("Entering main system loop.");
     log_info("Hello, world! I2C baud rate: %d", context->i2c_baudrate);
 
-    for (uint8_t x = 0; x < LED_MATRIX_WIDTH; x++)
-    for (uint8_t y = 0; y < LED_MATRIX_HEIGHT; y++)
-    {
-        is3741_set_pixel(context->is3741, x, y, 127);
-    }
-    
     while (true)
     {
-        sleep_ms(1000);
+        sleep_us(1);
     }
 }
 
