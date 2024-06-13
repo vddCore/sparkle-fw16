@@ -93,11 +93,6 @@ bool usb_stdio_init(void)
     }
 
     mutex_init(&usb_stdio_mutex);
-
-#if !USB_STDIO_NO_BI
-    bi_decl_if_func_used(bi_program_feature("USB stdin / stdout"));
-#endif
-
     stdio_set_driver_enabled(&stdio_usb, true);
     return true;
 }

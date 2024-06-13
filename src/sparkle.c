@@ -1,12 +1,15 @@
 ﻿#include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <pico/stdlib.h>
 #include <pico/binary_info/code.h>
 #include <hardware/i2c.h>
 
 #include "sparkle.h"
+
+
 #include "is3741.h"
 #include "log.h"
 #include "usbcomm/usb_control.h"
@@ -76,7 +79,7 @@ sparkle_context_t* sparkle_init(void)
     is3741_set_sws_config(context->is3741, IS3741_SWS_SW1SW8);
 #endif
 
-    if (is3741_set_led_scaling(sparkle->is3741, 100) < 0)
+    if (is3741_set_led_scaling(sparkle->is3741, 50) < 0)
     {
         free(sparkle);
 
@@ -126,6 +129,9 @@ _Noreturn void sparkle_main(sparkle_context_t* sparkle)
     log_info("Entering main system loop.");
     log_info("Hello, world! I2C baud rate: %d", sparkle->i2c_baudrate);
 
+    uint16_t current_led = 0;
+
+    
     is3741_set_pixel(sparkle->is3741, 0, 0, 255);
 
     while (!usb_control_connected())
@@ -144,9 +150,17 @@ _Noreturn void sparkle_main(sparkle_context_t* sparkle)
     {
         if (usb_control_read(&in_char, 1) > 0)
         {
+            uint8_t x = current_led % LED_MATRIX_WIDTH;
+            uint8_t y = current_led / LED_MATRIX_WIDTH;
+            
             if (in_char == 'a')
             {
                 usb_control_write(buffer, sizeof(buffer));
+            }
+            else if (in_char == 'b')
+            {
+                is3741_set_pixel(sparkle->is3741, x, y, 127);
+                current_led++;
             }
         }
         
