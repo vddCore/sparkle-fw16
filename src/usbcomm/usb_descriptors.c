@@ -1,8 +1,7 @@
-﻿#include "tusb_config.h"
-#include "tusb.h"
+﻿#include <tusb.h>
+#include <pico/unique_id.h>
 
-#include "pico/usb_reset_interface.h"
-#include "pico/unique_id.h"
+#include "usb_reset_interface.h"
 
 #define USBD_VID (0x2E8A) // Raspberry Pi
 #define USBD_PID (0x000A) // Raspberry Pi Pico SDK CDC
@@ -33,8 +32,6 @@
 #define USBD_STR_CDC (0x04)
 #define USBD_STR_RPI_RESET (0x05)
 
-// Note: descriptors returned from callbacks must exist long enough for transfer to complete
-
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
     .bDescriptorType = TUSB_DESC_DEVICE,
@@ -53,7 +50,6 @@ static const tusb_desc_device_t usbd_desc_device = {
 };
 
 #define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
-  /* Interface */\
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx,
 
 static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
@@ -73,9 +69,7 @@ static const char *const usbd_desc_str[] = {
     [USBD_STR_PRODUCT] = USBD_PRODUCT,
     [USBD_STR_SERIAL] = usbd_serial_str,
     [USBD_STR_CDC] = "Board CDC",
-#if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
-    [USBD_STR_RPI_RESET] = "Reset",
-#endif
+    [USBD_STR_RPI_RESET] = "Reset"
 };
 
 const uint8_t *tud_descriptor_device_cb(void) {
@@ -88,7 +82,7 @@ const uint8_t *tud_descriptor_configuration_cb(__unused uint8_t index) {
 
 const uint16_t *tud_descriptor_string_cb(uint8_t index, __unused uint16_t langid) {
 #ifndef USBD_DESC_STR_MAX
-#define USBD_DESC_STR_MAX (20)
+#define USBD_DESC_STR_MAX (64)
 #elif USBD_DESC_STR_MAX > 127
 #error USBD_DESC_STR_MAX too high (max is 127).
 #elif USBD_DESC_STR_MAX < 17

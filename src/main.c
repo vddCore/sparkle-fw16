@@ -1,13 +1,12 @@
 ﻿#include <pico/stdio.h>
 
 #include "sparkle.h"
-
-extern bool stdio_usb_init(void);
+#include "usbcomm/usb_stdio.h"
 
 int main(void)
 {
     stdio_init_all();
-    stdio_usb_init();
+    usb_stdio_init();
     
     sparkle_context_t* sparkle = sparkle_init();
     sparkle_main(sparkle);

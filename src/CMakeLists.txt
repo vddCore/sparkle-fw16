@@ -13,13 +13,13 @@ add_executable(${PROJECT_NAME}
         usbcomm/usb_stdio.c
         usbcomm/usb_stdio.h
         usbcomm/usb_reset_interface.c
+        usbcomm/usb_reset_interface.h
 )
 
 # pull in common dependencies
 target_link_libraries(${PROJECT_NAME}
     pico_stdlib
     pico_unique_id
-    pico_usb_reset_interface
     hardware_i2c
     tinyusb_board
     tinyusb_device
