@@ -14,6 +14,10 @@ add_executable(${PROJECT_NAME}
         usbcomm/usb_stdio.h
         usbcomm/usb_reset_interface.c
         usbcomm/usb_reset_interface.h
+        usbcomm/usb_control.c
+        usbcomm/usb_control.h
+        usbcomm/usb_task.c
+        usbcomm/usb_task.h
 )
 
 # pull in common dependencies

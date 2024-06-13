@@ -9,6 +9,7 @@
 #include "sparkle.h"
 #include "is3741.h"
 #include "log.h"
+#include "usbcomm/usb_control.h"
 
 static void sparkle_gpio_init(sparkle_context_t* context)
 {
@@ -125,8 +126,30 @@ _Noreturn void sparkle_main(sparkle_context_t* sparkle)
     log_info("Entering main system loop.");
     log_info("Hello, world! I2C baud rate: %d", sparkle->i2c_baudrate);
 
+    is3741_set_pixel(sparkle->is3741, 0, 0, 255);
+
+    while (!usb_control_connected())
+    {
+        sleep_ms(500);
+    }
+
+    log_info("USB Control Port connected.");
+    is3741_set_pixel(sparkle->is3741, 1, 0, 255);    
+
+    uint8_t buffer[32] = { 0 };
+    uint8_t in_char = 0;
+    memset(buffer, 'A', sizeof(buffer));
+    
     while (true)
     {
+        if (usb_control_read(&in_char, 1) > 0)
+        {
+            if (in_char == 'a')
+            {
+                usb_control_write(buffer, sizeof(buffer));
+            }
+        }
+        
         sleep_us(1);
     }
 }

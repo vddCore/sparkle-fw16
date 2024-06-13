@@ -20,8 +20,8 @@ static void resetd_reset(uint8_t __unused rhport)
 static uint16_t resetd_open(uint8_t __unused rhport, tusb_desc_interface_t const* itf_desc, uint16_t max_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass &&
-              RESET_INTERFACE_SUBCLASS == itf_desc->bInterfaceSubClass &&
-              RESET_INTERFACE_PROTOCOL == itf_desc->bInterfaceProtocol, 0);
+              USB_RESET_INTERFACE_SUBCLASS == itf_desc->bInterfaceSubClass &&
+              USB_RESET_INTERFACE_PROTOCOL == itf_desc->bInterfaceProtocol, 0);
 
     uint16_t const drv_len = sizeof(tusb_desc_interface_t);
     TU_VERIFY(max_len >= drv_len, 0);
@@ -36,7 +36,7 @@ static bool resetd_control_xfer_cb(uint8_t __unused rhport, uint8_t stage, tusb_
 
     if (request->wIndex == itf_num)
     {
-        if (request->bRequest == RESET_REQUEST_BOOTSEL)
+        if (request->bRequest == USB_RESET_REQUEST_BOOTSEL)
         {
             uint gpio_mask = 0u;
 
@@ -47,13 +47,13 @@ static bool resetd_control_xfer_cb(uint8_t __unused rhport, uint8_t stage, tusb_
 
             reset_usb_boot(
                 gpio_mask,
-                (request->wValue & 0x7f) | USB_STDIO_USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK
+                (request->wValue & 0x7f) | USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK
             );
         }
 
-        if (request->bRequest == RESET_REQUEST_FLASH)
+        if (request->bRequest == USB_RESET_REQUEST_FLASH)
         {
-            watchdog_reboot(0, 0, USB_STDIO_USB_RESET_RESET_TO_FLASH_DELAY_MS);
+            watchdog_reboot(0, 0, USB_RESET_TO_FLASH_DELAY_MS);
             return true;
         }
     }
@@ -86,9 +86,9 @@ usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count)
 
 void tud_cdc_line_coding_cb(__unused uint8_t itf, cdc_line_coding_t const* p_line_coding)
 {
-    if (p_line_coding->bit_rate == USB_STDIO_USB_RESET_MAGIC_BAUD_RATE)
+    if (p_line_coding->bit_rate == USB_RESET_MAGIC_BAUD_RATE)
     {
         const uint gpio_mask = 0u;
-        reset_usb_boot(gpio_mask, USB_STDIO_USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK);
+        reset_usb_boot(gpio_mask, USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK);
     }
 }

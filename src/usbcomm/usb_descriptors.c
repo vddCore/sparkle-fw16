@@ -3,24 +3,29 @@
 
 #include "usb_reset_interface.h"
 
-#define USBD_VID (0x2E8A) // Raspberry Pi
-#define USBD_PID (0x000A) // Raspberry Pi Pico SDK CDC
-#define USBD_MANUFACTURER "Raspberry Pi"
-#define USBD_PRODUCT "Pico"
+#define USBD_VID (0x32AC) // Framework Computer Inc
+#define USBD_PID (0x0020) // LED Matrix Input Module
+#define USBD_MANUFACTURER "Framework Computer Inc"
+#define USBD_PRODUCT "LED Matrix Input Module | SPARKLE"
 
 #define TUD_RPI_RESET_DESC_LEN  9
 
-#define USBD_DESC_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
+#define USBD_DESC_LEN (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) + TUD_RPI_RESET_DESC_LEN)
 #define USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE (0)
 #define USBD_MAX_POWER_MA (250)
 
-#define USBD_ITF_CDC       (0) // needs 2 interfaces
-#define USBD_ITF_RPI_RESET (2)
-#define USBD_ITF_MAX       (3)
+#define USBD_ITF_CDC_0     (0)
+#define USBD_ITF_CDC_1     (2)
+#define USBD_ITF_RPI_RESET (4)
+#define USBD_ITF_MAX       (5)
 
-#define USBD_CDC0_EP_CMD (0x81)
-#define USBD_CDC0_EP_OUT (0x02)
-#define USBD_CDC0_EP_IN (0x82)
+#define USBD_CDC_0_EP_CMD (0x81)
+#define USBD_CDC_0_EP_OUT (0x02)
+#define USBD_CDC_0_EP_IN  (0x82)
+
+#define USBD_CDC_1_EP_CMD (0x83)
+#define USBD_CDC_1_EP_OUT (0x03)
+#define USBD_CDC_1_EP_IN  (0x84)
 
 #define USBD_CDC_CMD_MAX_SIZE (8)
 #define USBD_CDC_IN_OUT_MAX_SIZE (64)
@@ -29,8 +34,9 @@
 #define USBD_STR_MANUF (0x01)
 #define USBD_STR_PRODUCT (0x02)
 #define USBD_STR_SERIAL (0x03)
-#define USBD_STR_CDC (0x04)
-#define USBD_STR_RPI_RESET (0x05)
+#define USBD_STR_CDC_0 (0x04)
+#define USBD_STR_CDC_1 (0x05)
+#define USBD_STR_RPI_RESET (0x06)
 
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
@@ -50,15 +56,18 @@ static const tusb_desc_device_t usbd_desc_device = {
 };
 
 #define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx,
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, USB_RESET_INTERFACE_SUBCLASS, USB_RESET_INTERFACE_PROTOCOL, _stridx,
 
 static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
     TUD_CONFIG_DESCRIPTOR(1, USBD_ITF_MAX, USBD_STR_0, USBD_DESC_LEN,
         USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
 
-    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC, USBD_STR_CDC, USBD_CDC0_EP_CMD,
-        USBD_CDC_CMD_MAX_SIZE, USBD_CDC0_EP_OUT, USBD_CDC0_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_0, USBD_STR_CDC_0, USBD_CDC_0_EP_CMD,
+        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_0_EP_OUT, USBD_CDC_0_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
 
+    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_1, USBD_STR_CDC_1, USBD_CDC_1_EP_CMD,
+        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_1_EP_OUT, USBD_CDC_1_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
+    
     TUD_RPI_RESET_DESCRIPTOR(USBD_ITF_RPI_RESET, USBD_STR_RPI_RESET)
 };
 
@@ -68,8 +77,9 @@ static const char *const usbd_desc_str[] = {
     [USBD_STR_MANUF] = USBD_MANUFACTURER,
     [USBD_STR_PRODUCT] = USBD_PRODUCT,
     [USBD_STR_SERIAL] = usbd_serial_str,
-    [USBD_STR_CDC] = "Board CDC",
-    [USBD_STR_RPI_RESET] = "Reset"
+    [USBD_STR_CDC_0] = "LED Matrix CDC Debug Port",
+    [USBD_STR_CDC_1] = "LED Matrix CDC Control Port",
+    [USBD_STR_RPI_RESET] = "LED Matrix Reset Port"
 };
 
 const uint8_t *tud_descriptor_device_cb(void) {

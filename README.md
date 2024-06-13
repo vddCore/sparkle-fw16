@@ -35,3 +35,9 @@ directory.
    file magically vanished - that's how it confirms the flashing process has completed.
 6. Take the input module(s) out again and toggle the DIP-switch pin 2 into OFF position.
 7. Replace the input module(s). Congratulations, you're running `sparkle-fw16`.
+
+# How does it work?
+When Sparkle starts up it initializes 3 interfaces. Two of them are CDC serial ports, one
+is a regular RP2040 reset-over-usb port. CDC serial port 0 is for debugging purposes. Log 
+outputs and such. CDC serial port 1 is the control port, all API requests should be sent
+there.
