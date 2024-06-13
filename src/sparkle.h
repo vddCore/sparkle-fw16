@@ -7,6 +7,10 @@
 
 #include "is3741.h"
 
+#define SPARKLE_VERSION_MAJOR 0
+#define SPARKLE_VERSION_MINOR 1
+#define SPARKLE_VERSION_PATCH 0
+
 #define SPARKLE_I2C_INSTANCE   i2c1
 #define SPARKLE_GPIO_SLEEP  0
 #define SPARKLE_GPIO_DIP1  25
@@ -24,7 +28,7 @@ typedef struct sparkle_context
 } sparkle_context_t;
 
 sparkle_context_t* sparkle_init(void);
-_Noreturn void sparkle_main(sparkle_context_t* context);
-void sparkle_exit(sparkle_context_t* context);
+_Noreturn void sparkle_main(sparkle_context_t* sparkle);
+void sparkle_exit(sparkle_context_t* sparkle);
 
 #endif //BOARD_H
