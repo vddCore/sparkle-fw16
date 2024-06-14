@@ -14,6 +14,13 @@
 #define i2c_write_stop_sz(state, buf, sz) i2c_write_blocking(i2c1, state->i2c_address, buf, sz, false)
 #define i2c_write_nostop(state, buf) i2c_write_blocking(i2c1, state->i2c_address, buf, sizeof(buf), true)
 
+#define EXIT_IF_STATE_NULL              \
+    if (!state)                         \
+    {                                   \
+        log_error("state == NULL.");    \
+        return IS3741_ERR_STATE;        \
+    }
+
 typedef struct is3741_state
 {
     uint8_t i2c_address;
@@ -88,32 +95,43 @@ void is3741_exit(is3741_state_t* state)
     free(state);
 }
 
-is3741_err_t is3741_set_pixel(is3741_state_t* state, uint8_t x, uint8_t y, uint8_t brightness)
+is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* pixel)
 {
-    if (x >= LED_MATRIX_WIDTH)
-    {
-        log_error("Coordinate X = %d: out of range.", x);
-        return IS3741_ERR_COORD_X;
-    }
-
-    if (y >= LED_MATRIX_HEIGHT)
-    {
-        log_error("Coordinate Y = %d: out of range.", y);
-        return IS3741_ERR_COORD_Y;
-    }
-
-    uint16_t pixel_info = LUT_PIXEL[IS3741_XY_TO_LEDREG(x, y)];
-
-    uint8_t pwm_page = (pixel_info & 0x00FF) == 0 ? IS3741_PAGE_PWM0 : IS3741_PAGE_PWM1;
-    uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
-
+    EXIT_IF_STATE_NULL;
+    
     if (is3741_select_page(state, pwm_page) < 0)
     {
         log_error("Unable to select PWM page %d.", pwm_page);
         return IS3741_ERR_PAGESELECT;
     }
 
-    uint8_t data[] = { pixel_id, brightness };
+    uint8_t data[] = { led_id };
+    if (i2c_write_stop(state, data) < 0)
+    {
+        log_error("I2C write error.");
+        return IS3741_ERR_I2C_WRITE;
+    }
+
+    if(is3741_read_reg8(state, led_id, pixel) < 0)
+    {
+        log_error("Pixel register read error.");
+        return IS3741_ERR_REG_READ;
+    }
+    
+    return IS3741_ERR_OK;
+}
+
+is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t brightness)
+{
+    EXIT_IF_STATE_NULL;
+    
+    if (is3741_select_page(state, pwm_page) < 0)
+    {
+        log_error("Unable to select PWM page %d.", pwm_page);
+        return IS3741_ERR_PAGESELECT;
+    }
+
+    uint8_t data[] = { led_id, brightness };
     if (i2c_write_stop(state, data) < 0)
     {
         log_error("I2C write error.");
@@ -125,6 +143,8 @@ is3741_err_t is3741_set_pixel(is3741_state_t* state, uint8_t x, uint8_t y, uint8
 
 is3741_err_t is3741_unlock_crwl(is3741_state_t* state)
 {
+    EXIT_IF_STATE_NULL;
+    
     uint8_t data[] = { IS3741_REG_CRWL, 0b11000101 };
     if (i2c_write_stop(state, data) < 0)
     {
@@ -137,6 +157,8 @@ is3741_err_t is3741_unlock_crwl(is3741_state_t* state)
 
 is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page)
 {
+    EXIT_IF_STATE_NULL;
+    
     if (page >= IS3741_PAGE_MAX)
     {
         log_error("Attempt to select page register %d, which is out of range.", page);
@@ -172,6 +194,8 @@ is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page)
 
 is3741_err_t is3741_reset(is3741_state_t* state)
 {
+    EXIT_IF_STATE_NULL;
+    
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -192,6 +216,8 @@ is3741_err_t is3741_reset(is3741_state_t* state)
 
 is3741_err_t is3741_enable(is3741_state_t* state, bool enable)
 {
+    EXIT_IF_STATE_NULL;
+    
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -226,6 +252,8 @@ is3741_err_t is3741_enable(is3741_state_t* state, bool enable)
 
 is3741_err_t is3741_set_sws_config(is3741_state_t* state, uint8_t sws_value)
 {
+    EXIT_IF_STATE_NULL;
+    
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -253,6 +281,8 @@ is3741_err_t is3741_set_sws_config(is3741_state_t* state, uint8_t sws_value)
 
 is3741_err_t is3741_set_pwm_freq(is3741_state_t* state, uint8_t pfs_value)
 {
+    EXIT_IF_STATE_NULL;
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -271,6 +301,8 @@ is3741_err_t is3741_set_pwm_freq(is3741_state_t* state, uint8_t pfs_value)
 
 is3741_err_t is3741_set_global_current(is3741_state_t* state, uint8_t brightness)
 {
+    EXIT_IF_STATE_NULL;
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -289,6 +321,8 @@ is3741_err_t is3741_set_global_current(is3741_state_t* state, uint8_t brightness
 
 is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness)
 {
+    EXIT_IF_STATE_NULL;
+
     if (is3741_select_page(state, IS3741_PAGE_LED_SCALING1) < 0)
     {
         log_error("Unable to select the function page (1/2).");
@@ -323,6 +357,8 @@ is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness)
 
 is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byte)
 {
+    EXIT_IF_STATE_NULL;
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -340,6 +376,8 @@ is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byt
 
 is3741_err_t is3741_read_id_register(is3741_state_t* state, uint8_t* id_byte)
 {
+    EXIT_IF_STATE_NULL;
+
     if (is3741_read_reg8(state, IS3741_REG_ID, id_byte) < 0)
     {
         log_error("Unable to read the ID register.");
@@ -351,6 +389,8 @@ is3741_err_t is3741_read_id_register(is3741_state_t* state, uint8_t* id_byte)
 
 is3741_err_t is3741_read_reg8(is3741_state_t* state, uint8_t reg, uint8_t* out_data)
 {
+    EXIT_IF_STATE_NULL;
+
     uint8_t data[] = { reg };
     if (i2c_write_nostop(state, data) < 0)
     {

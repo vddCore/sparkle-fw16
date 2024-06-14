@@ -3,6 +3,7 @@
 
 #ifdef SPARKLE_ENABLE_LOGGING
 
+#include <stdio.h>
 #include <string.h>
 
 #define NONE                 "\e[0m"

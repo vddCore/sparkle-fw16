@@ -5,10 +5,10 @@
 
 #include <stdint.h>
 
-#include "is3741.h"
+#include "led_matrix.h"
 
-#if IS3741_USE_EVT_LUT
-const uint16_t LUT_PIXEL[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {
+#if LED_MATRIX_USE_EVT_LUT
+const uint16_t LED_MATRIX_LUT[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {
     0x3c01, // x: 9, y: 1, sw: 9, cs: 1, id:  9
     0x1e01, // x: 8, y: 1, sw: 8, cs: 1, id:  8
     0x0001, // x: 7, y: 1, sw: 7, cs: 1, id:  7
@@ -317,7 +317,7 @@ const uint16_t LUT_PIXEL[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {
     0x5d01, // x: 1, y:34, sw: 1, cs:34, id:298
 };
 #else // USE_EVT_LUT
-const uint16_t LUT_PIXEL[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {
+const uint16_t LED_MATRIX_LUT[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {
     0x5f01, // x: 9, y: 1, sw: 1, cs:36, id:  9
     0x1e01, // x: 8, y: 1, sw: 8, cs: 1, id:  8
     0x0001, // x: 7, y: 1, sw: 7, cs: 1, id:  7
