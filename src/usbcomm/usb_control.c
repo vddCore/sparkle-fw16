@@ -1,7 +1,7 @@
 ﻿#include <tusb.h>
 
 #if (CFG_TUD_ENABLED | TUSB_OPT_DEVICE_ENABLED) && CFG_TUD_CDC
-#include <pico/binary_info/code.h>
+#include <pico/time.h>
 
 #include "usb_control.h"
 #include "usb_task.h"
@@ -21,66 +21,86 @@ bool usb_control_connected(void)
     return tud_cdc_n_connected(USB_CONTROL_ITF);
 }
 
-int32_t usb_control_read(uint8_t* buffer, size_t len)
+int32_t usb_control_read(uint8_t* buffer, uint32_t length)
 {
     int32_t rc = PICO_ERROR_NO_DATA;
 
     if (usb_control_connected() && tud_cdc_n_available(USB_CONTROL_ITF))
     {
-        int32_t count = (int32_t)tud_cdc_n_read(USB_CONTROL_ITF, buffer, len);
+        int32_t count = (int32_t)tud_cdc_n_read(
+            USB_CONTROL_ITF,
+            buffer,
+            length
+        );
+        
         rc = count ? count : PICO_ERROR_NO_DATA;
     }
-    
+    else
+    {
+        tud_task();
+    }
+
     return rc;
 }
 
-int32_t usb_control_write(uint8_t* data, size_t len)
+int32_t usb_control_write(uint8_t* data, uint32_t length)
 {
-    if (len == 0) return 0;
+    if (!length) return 0;
     
-    int32_t rc = PICO_ERROR_GENERIC;
+    static uint64_t last_avail_time;
 
+    uint32_t total_written = 0;
+    int32_t rc = PICO_ERROR_GENERIC;
+    
     if (usb_control_connected())
     {
-        int32_t written_bytes = 0;
-        
-        size_t bytes_left = len;
-        uint32_t max_bytes_per_cycle = tud_cdc_n_write_available(USB_CONTROL_ITF);
-
-        if (max_bytes_per_cycle)
+        for (int32_t i = 0; i < length;)
         {
-            while (bytes_left > 0)
+            int32_t remaining = length - i;
+            int32_t available = (int32_t)tud_cdc_n_write_available(USB_CONTROL_ITF);
+
+            if (remaining > available)
+                remaining = available;
+
+            if (remaining > 0)
             {
-                if (max_bytes_per_cycle < bytes_left)
+                int32_t written = (int32_t)tud_cdc_n_write(
+                    USB_CONTROL_ITF,
+                    data + i,
+                    (uint32_t)remaining
+                );
+
+                tud_task();
+                tud_cdc_n_write_flush(USB_CONTROL_ITF);
+                
+                i += written;
+                total_written += written;
+                last_avail_time = time_us_64();
+            }
+            else
+            {
+                tud_task();
+                tud_cdc_n_write_flush(USB_CONTROL_ITF);
+
+                if (!usb_control_connected()
+                    || (!tud_cdc_n_write_available(USB_CONTROL_ITF)
+                        && time_us_64() > last_avail_time + USB_CONTROL_BUFFER_TIMEOUT_US))
                 {
-                    written_bytes += tud_cdc_n_write(
-                        USB_CONTROL_ITF,
-                        data + (len - bytes_left),
-                        max_bytes_per_cycle
-                    );
-                    
-                    bytes_left -= max_bytes_per_cycle;
-                }
-                else
-                {
-                    written_bytes += tud_cdc_n_write(
-                        USB_CONTROL_ITF,
-                        data + (len - bytes_left),
-                        bytes_left
-                    );
-                    
-                    bytes_left = 0;
+                    rc = PICO_ERROR_TIMEOUT;
+                    break;
                 }
             }
 
-            tud_cdc_n_write_flush(USB_CONTROL_ITF);
-            rc = written_bytes;
+            rc = total_written;
         }
     }
-    
+    else
+    {
+        last_avail_time = 0;
+    }
+
     return rc;
 }
-
 #else
 #warning CDC is not enabled - USB control port will not be initialized.
 bool stdio_usb_init(void) {

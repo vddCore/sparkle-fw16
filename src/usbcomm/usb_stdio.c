@@ -10,8 +10,10 @@
 
 static mutex_t usb_stdio_mutex;
 
-static void usb_stdio_out_chars(const char* buf, int length)
+static void usb_stdio_push_data(const char* buffer, int length)
 {
+    if (!length) return;
+    
     static uint64_t last_avail_time;
 
     if (!mutex_try_enter_block_until(&usb_stdio_mutex, make_timeout_time_ms(PICO_STDIO_DEADLOCK_TIMEOUT_MS)))
@@ -21,25 +23,36 @@ static void usb_stdio_out_chars(const char* buf, int length)
     
     if (usb_stdio_connected())
     {
-        for (int i = 0; i < length;)
+        for (int32_t i = 0; i < length;)
         {
-            int n = length - i;
-            int avail = (int)tud_cdc_n_write_available(USB_STDIO_ITF);
-            if (n > avail) n = avail;
-            if (n)
+            int32_t remaining = length - i;
+            int32_t available = (int32_t)tud_cdc_n_write_available(USB_STDIO_ITF);
+            
+            if (remaining > available)
+                remaining = available;
+            
+            if (remaining > 0)
             {
-                int n2 = (int)tud_cdc_write(buf + i, (uint32_t)n);
+                int32_t written = (int32_t)tud_cdc_n_write(
+                    USB_STDIO_ITF,
+                    buffer + i,
+                    (uint32_t)remaining
+                );
+                
                 tud_task();
                 tud_cdc_n_write_flush(USB_STDIO_ITF);
-                i += n2;
+
+                i += written;
                 last_avail_time = time_us_64();
             }
             else
             {
                 tud_task();
                 tud_cdc_n_write_flush(USB_STDIO_ITF);
-                if (!usb_stdio_connected() ||
-                    (!tud_cdc_n_write_available(USB_STDIO_ITF) && time_us_64() > last_avail_time + USB_STDIO_STDOUT_TIMEOUT_US))
+                
+                if (!usb_stdio_connected()
+                    || (!tud_cdc_n_write_available(USB_STDIO_ITF)
+                        && time_us_64() > last_avail_time + USB_STDIO_STDOUT_TIMEOUT_US))
                 {
                     break;
                 }
@@ -50,12 +63,14 @@ static void usb_stdio_out_chars(const char* buf, int length)
     {
         last_avail_time = 0;
     }
+    
     mutex_exit(&usb_stdio_mutex);
 }
 
-int usb_stdio_in_chars(char* buf, int length)
+static int usb_stdio_pull_data(char* buffer, int length)
 {
-    int rc = PICO_ERROR_NO_DATA;
+    int32_t rc = PICO_ERROR_NO_DATA;
+    
     if (usb_stdio_connected() && tud_cdc_n_available(USB_STDIO_ITF))
     {
         if (!mutex_try_enter_block_until(&usb_stdio_mutex, make_timeout_time_ms(PICO_STDIO_DEADLOCK_TIMEOUT_MS)))
@@ -65,21 +80,27 @@ int usb_stdio_in_chars(char* buf, int length)
         
         if (usb_stdio_connected() && tud_cdc_n_available(USB_STDIO_ITF))
         {
-            int count = (int)tud_cdc_n_read(USB_STDIO_ITF, buf, (uint32_t)length);
+            int32_t count = (int32_t)tud_cdc_n_read(
+                USB_STDIO_ITF,
+                buffer,
+                (uint32_t)length
+            );
+            
             rc = count ? count : PICO_ERROR_NO_DATA;
         }
         else
         {
             tud_task();
         }
+        
         mutex_exit(&usb_stdio_mutex);
     }
     return rc;
 }
 
 stdio_driver_t stdio_usb = {
-    .out_chars = usb_stdio_out_chars,
-    .in_chars = usb_stdio_in_chars,
+    .out_chars = usb_stdio_push_data,
+    .in_chars = usb_stdio_pull_data,
 #if PICO_STDIO_ENABLE_CRLF_SUPPORT
     .crlf_enabled = USB_STDIO_DEFAULT_CRLF
 #endif
@@ -94,16 +115,13 @@ bool usb_stdio_init(void)
 
     mutex_init(&usb_stdio_mutex);
     stdio_set_driver_enabled(&stdio_usb, true);
+    
     return true;
 }
 
 bool usb_stdio_connected(void)
 {
-#if USB_STDIO_CONNECTION_WITHOUT_DTR
-    return tud_ready();
-#else
     return tud_cdc_n_connected(USB_STDIO_ITF);
-#endif
 }
 
 #else
