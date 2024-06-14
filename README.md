@@ -218,7 +218,7 @@ Requests in this group are ignored when wake-on-command is inactive
 ```
 
 ```
-0x27 Di_draw_bitmap <- <306> [pixels: uint8_t*]
+0x23 Di_draw_bitmap <- <306> [pixels: uint8_t*]
   -> [void]
   
   WHERE `pixels`:
@@ -228,7 +228,7 @@ Requests in this group are ignored when wake-on-command is inactive
 ```
 
 ```
-0x28-0x2F reserved <- [void]
+0x24-0x2F reserved <- [void]
   -> [void] _Noop
 ```
 

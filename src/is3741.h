@@ -1,5 +1,5 @@
-﻿#ifndef LED_CONTROLLER_H
-#define LED_CONTROLLER_H
+﻿#ifndef IS3741_H
+#define IS3741_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -82,4 +82,4 @@ is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byt
 is3741_err_t is3741_read_id_register(is3741_state_t* state, uint8_t* id_byte);
 is3741_err_t is3741_read_reg8(is3741_state_t* state, uint8_t reg, uint8_t* out_data);
 
-#endif
+#endif // IS3741_H

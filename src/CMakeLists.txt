@@ -20,6 +20,13 @@ add_executable(${PROJECT_NAME}
     usbcomm/usb_control.h
     usbcomm/usb_task.c
     usbcomm/usb_task.h
+    protocol/protocol_task.c
+    protocol/protocol_task.h
+    protocol/sparkle_protocol.h
+    protocol/ssp_commands_sc.c
+    protocol/ssp_commands_sc.h
+    pins.c
+    pins.h
 )
 
 target_link_libraries(${PROJECT_NAME}
