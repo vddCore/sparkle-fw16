@@ -12,11 +12,6 @@ int main(void)
     usb_stdio_init();
     usb_control_init();
 
-    while (!usb_stdio_connected())
-    {
-        sleep_ms(500);
-    }
-    
     sparkle_context_t* sparkle = sparkle_init();
     sparkle_main(sparkle);
 
