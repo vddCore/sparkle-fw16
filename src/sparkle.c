@@ -12,8 +12,6 @@
 #include "log.h"
 #include "is3741.h"
 #include "led_matrix.h"
-#include "usbcomm/usb_control.h"
-#include "usbcomm/usb_stdio.h"
 
 static void sparkle_gpio_init(sparkle_context_t* context)
 {
@@ -52,13 +50,12 @@ static int32_t sparkle_led_matrix_init(sparkle_context_t* sparkle)
 #if LED_MATRIX_USE_EVT_LUT
         if (!result) result = (int32_t)is3741_set_sws_config(sparkle->is3741, IS3741_SWS_SW1SW9);
 #else
-    if (!result)
-        result = (int32_t)is3741_set_sws_config(
-            sparkle->is3741, IS3741_SWS_SW1SW8);
+    if (!result) result = (int32_t)is3741_set_sws_config(sparkle->is3741, IS3741_SWS_SW1SW8);
 #endif
 
     if (!result) result = is3741_set_led_scaling(sparkle->is3741, 50);
     if (!result) result = is3741_set_pwm_freq(sparkle->is3741, IS3741_PFS_29000HZ);
+    
     if (!result)
     {
         led_matrix_set_controller(sparkle->is3741);
@@ -81,7 +78,6 @@ sparkle_context_t* sparkle_init(void)
         }
     }
 
-    sparkle_gpio_init(sparkle);
     sparkle_i2c_init(sparkle);
 
     if (sparkle_led_matrix_init(sparkle) < 0)
@@ -94,6 +90,8 @@ sparkle_context_t* sparkle_init(void)
             sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
         }
     }
+    
+    sparkle_gpio_init(sparkle);
 
     return sparkle;
 }
@@ -119,82 +117,12 @@ void sparkle_exit(sparkle_context_t* sparkle)
 }
 
 _Noreturn void sparkle_main(sparkle_context_t* sparkle)
-{
-    while (!usb_stdio_connected())
-    {
-        sleep_ms(500);
-    }
-    
+{    
     log_info("Entering main system loop.");
     log_info("Hello, world! I2C baud rate: %d", sparkle->i2c_baudrate);
 
-    uint8_t buffer[32] = { 0 };
-    uint8_t in_char = 0;
-    memset(buffer, 'A', sizeof(buffer));
-    
     while (true)
     {
-        if (usb_control_read(&in_char, 1) > 0)
-        {
-            switch (in_char)
-            {
-                case 'q':
-                {
-                    usb_control_write(buffer, sizeof(buffer));
-                    break;
-                }
-                
-                case 'w':
-                {
-                    led_matrix_fill(63);
-                    break;
-                }
-                
-                case 'e':
-                {
-                    led_matrix_fill(127);
-                    break;
-                }
-                
-                case 'r':
-                {
-                    led_matrix_fill(191);
-                    break;
-                }
-                
-                case 't':
-                {
-                    led_matrix_fill(255);
-                    break;
-                }
-                
-                case 'y':
-                {
-                    led_matrix_clear();
-                    break;
-                }
-                
-                case 'u':
-                {
-                    for (uint8_t y = 0; y < LED_MATRIX_HEIGHT; y++)
-                    {
-                        printf("%02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
-                            led_matrix_get_pixel(0, y),
-                            led_matrix_get_pixel(1, y),
-                            led_matrix_get_pixel(2, y),
-                            led_matrix_get_pixel(3, y),
-                            led_matrix_get_pixel(4, y),
-                            led_matrix_get_pixel(5, y),
-                            led_matrix_get_pixel(6, y),
-                            led_matrix_get_pixel(7, y),
-                            led_matrix_get_pixel(8, y)
-                        );
-                    }
-                    
-                    break;
-                }
-            }
-        }
 
         sleep_us(1);
     }

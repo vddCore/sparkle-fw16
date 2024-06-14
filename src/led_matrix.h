@@ -2,6 +2,7 @@
 #define LED_MATRIX_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #include "is3741.h"
 
@@ -21,40 +22,11 @@ extern const uint16_t LED_MATRIX_LUT[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT];
 
 void led_matrix_set_controller(is3741_state_t* is3741);
 
-void led_matrix_line(
-    uint8_t x1, uint8_t y1,
-    uint8_t x2, uint8_t y2,
-    uint8_t brightness
-);
-
-void led_matrix_triangle_stroke(
-    uint8_t x1, uint8_t y1,
-    uint8_t x2, uint8_t y2,
-    uint8_t x3, uint8_t y3,
-    uint8_t brightness
-);
-
-void led_matrix_triangle_fill(
-    uint8_t x1, uint8_t y1,
-    uint8_t x2, uint8_t y2,
-    uint8_t x3, uint8_t y3,
-    uint8_t brightness
-);
-
-void led_matrix_rect_stroke(
-    uint8_t x1, uint8_t y1,
-    uint8_t x2, uint8_t y2,
-    uint8_t brightness
-);
-
-void led_matrix_rect_fill(
-    uint8_t x1, uint8_t y1,
-    uint8_t x2, uint8_t y2,
-    uint8_t brightness
-);
-
 void led_matrix_clear(void);
 void led_matrix_fill(uint8_t brightness);
+
+void led_matrix_line(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2, uint8_t brightness);
+void led_matrix_bitmap(const uint8_t* bitmap, size_t len);
 
 uint8_t led_matrix_get_pixel_fast(uint8_t x, uint8_t y);
 void led_matrix_set_pixel_fast(uint8_t x, uint8_t y, uint8_t brightness);
