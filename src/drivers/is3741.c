@@ -5,7 +5,7 @@
 
 #include <hardware/i2c.h>
 
-#include "sparkle/kernel.h"
+#include "firmware/kernel.h"
 #include "debug/log.h"
 
 #include "drivers/is3741.h"

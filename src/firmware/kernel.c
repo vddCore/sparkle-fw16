@@ -11,7 +11,7 @@
 #include "drivers/is3741.h"
 #include "drivers/led_matrix.h"
 
-#include "sparkle/kernel.h"
+#include "firmware/kernel.h"
 
 static void kernel_i2c_init(kernel_context_t* kernel)
 {

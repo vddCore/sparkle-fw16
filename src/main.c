@@ -2,7 +2,7 @@
 #include "drivers/usbcomm/usb_stdio.h"
 #include "drivers/pins.h"
 
-#include "sparkle/kernel.h"
+#include "firmware/kernel.h"
 
 int main(void)
 {

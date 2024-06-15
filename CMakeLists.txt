@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
-include(pico_sdk_import.cmake)
-include(pico_extras_import_optional.cmake)
+include(lib/pico_sdk_import.cmake)
+include(lib/pico_extras_import_optional.cmake)
 
 project(sparkle_fw16 C CXX ASM)
 
@@ -28,4 +28,9 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
 endif()
 
+add_compile_definitions(-DCFG_TUSB_CONFIG_FILE="${CMAKE_SOURCE_DIR}/include/drivers/usbcomm/tusb_config.h")
+
 add_subdirectory(src)
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+)
