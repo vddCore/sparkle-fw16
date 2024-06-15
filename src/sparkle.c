@@ -14,8 +14,6 @@
 
 #include "sparkle.h"
 
-#include "protocol/protocol_task.h"
-
 static void sparkle_i2c_init(sparkle_context_t* sparkle)
 {
     i2c_init(SPARKLE_I2C_INSTANCE, IS3741_I2C_FREQ);
@@ -96,11 +94,8 @@ void sparkle_exit(sparkle_context_t* sparkle)
 _Noreturn void sparkle_main(sparkle_context_t* sparkle)
 {    
     log_info("Entering main system loop.");
-
-    led_matrix_fill(255);
     
     while (true)
     {
-        serial_protocol_task(sparkle);
     }
 }

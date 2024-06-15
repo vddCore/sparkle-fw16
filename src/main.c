@@ -3,7 +3,6 @@
 #include "pins.h"
 #include "usbcomm/usb_task.h"
 #include "usbcomm/usb_stdio.h"
-#include "usbcomm/usb_control.h"
 
 #include "sparkle.h"
 
@@ -13,12 +12,6 @@ int main(void)
     
     usb_task_init();
     usb_stdio_init();
-    usb_control_init();
-
-    while (!usb_stdio_connected())
-    {
-        sleep_ms(100);
-    }
 
     sparkle_context_t* sparkle = sparkle_init();
     sparkle_main(sparkle);

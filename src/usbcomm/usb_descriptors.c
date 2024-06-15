@@ -3,40 +3,28 @@
 
 #include "usb_reset_interface.h"
 
+#define PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
+
+//==============================================================//
+//  [DEVICE DESCRIPTION]                                        //
+//==============================================================//
 #define USBD_VID (0x32AC) // Framework Computer Inc
 #define USBD_PID (0x0020) // LED Matrix Input Module
+#define USBD_DESC_STR_MAX (64)
+
 #define USBD_MANUFACTURER "Framework Computer Inc"
 #define USBD_PRODUCT "LED Matrix Input Module | SPARKLE"
 
-#define TUD_RPI_RESET_DESC_LEN  9
-
-#define USBD_DESC_LEN (TUD_CONFIG_DESC_LEN + (TUD_CDC_DESC_LEN * CFG_TUD_CDC) + TUD_RPI_RESET_DESC_LEN)
-#define USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE (0)
-#define USBD_MAX_POWER_MA (250)
-
-#define USBD_ITF_CDC_0     (0)
-#define USBD_ITF_CDC_1     (2)
-#define USBD_ITF_RPI_RESET (4)
-#define USBD_ITF_MAX       (5)
-
-#define USBD_CDC_0_EP_CMD (0x81)
-#define USBD_CDC_0_EP_OUT (0x02)
-#define USBD_CDC_0_EP_IN  (0x82)
-
-#define USBD_CDC_1_EP_CMD (0x83)
-#define USBD_CDC_1_EP_OUT (0x03)
-#define USBD_CDC_1_EP_IN  (0x84)
-
-#define USBD_CDC_CMD_MAX_SIZE (8)
-#define USBD_CDC_IN_OUT_MAX_SIZE (64)
-
-#define USBD_STR_0 (0x00)
-#define USBD_STR_MANUF (0x01)
-#define USBD_STR_PRODUCT (0x02)
-#define USBD_STR_SERIAL (0x03)
-#define USBD_STR_CDC_0 (0x04)
-#define USBD_STR_CDC_1 (0x05)
-#define USBD_STR_RPI_RESET (0x06)
+enum
+{
+    USBD_STR_LANGUAGE      = 0x00,
+    USBD_STR_MANUFACTURER  = 0x01,
+    USBD_STR_PRODUCT       = 0x02,
+    USBD_STR_SERIAL_NUMBER = 0x03,
+    USBD_STR_CDC_PORT_NAME = 0x04,
+    USBD_STR_HID_PORT_NAME = 0x05,
+    USBD_STR_RST_PORT_NAME = 0x06
+};
 
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
@@ -49,78 +37,149 @@ static const tusb_desc_device_t usbd_desc_device = {
     .idVendor = USBD_VID,
     .idProduct = USBD_PID,
     .bcdDevice = 0x0100,
-    .iManufacturer = USBD_STR_MANUF,
+    .iManufacturer = USBD_STR_MANUFACTURER,
     .iProduct = USBD_STR_PRODUCT,
-    .iSerialNumber = USBD_STR_SERIAL,
+    .iSerialNumber = USBD_STR_SERIAL_NUMBER,
     .bNumConfigurations = 1,
 };
 
-#define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, USB_RESET_INTERFACE_SUBCLASS, USB_RESET_INTERFACE_PROTOCOL, _stridx,
+//==============================================================//
+//  [ENDPOINT DEFINITIONS]                                      //
+//==============================================================//
+
+// ---/ SERIAL CDC ENDPOINT /---------------------------------- //
+//
+#define USBD_CDC_CMD_EP         (0x81)
+#define USBD_CDC_DATA_EP        (0x82)
+#define USBD_CDC_CMD_SIZE         (64)
+#define USBD_CDC_DATA_SIZE        (64)
+
+// ---/ HID ENDPOINT /------------------------------------------// 
+#define USBD_HID_EP             (0x83)
+#define USBD_HID_BUFSIZE          (16)
+#define USBD_HID_POLL_INTERVAL    (10)
+
+#define REPORT_ID_LED_MATRIX_SMALL_REQ (0x03)
+#define REPORT_ID_LED_MATRIX_LARGE_REQ (0x04)
+
+#define USBD_LED_MATRIX_FEATURE_DESCRIPTOR                         \
+    HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                    \
+    HID_USAGE(0x01),                                               \
+    HID_COLLECTION(HID_COLLECTION_APPLICATION),                    \
+        HID_REPORT_ID(REPORT_ID_LED_MATRIX_SMALL_REQ)              \
+        HID_USAGE(0x02),                                           \
+        HID_LOGICAL_MIN(0x00),                                     \
+        HID_LOGICAL_MAX_N(0xFF, 2),                                \
+        HID_REPORT_SIZE(8),                                        \
+        HID_REPORT_COUNT(16),                                      \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
+                                                                   \
+        HID_REPORT_ID(REPORT_ID_LED_MATRIX_LARGE_REQ)              \
+        HID_USAGE(0x03),                                           \
+        HID_REPORT_SIZE(8),                                        \
+        HID_REPORT_COUNT_N(306, 2),                                \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
+    HID_COLLECTION_END
+
+static const uint8_t desc_hid_report[] = { USBD_LED_MATRIX_FEATURE_DESCRIPTOR };
+
+//==============================================================//
+//  [ENDPOINT DEFINITIONS]                                      //
+//==============================================================//
+
+#define USBD_DESC_LEN ((TUD_CONFIG_DESC_LEN) +            \
+                       (TUD_CDC_DESC_LEN * CFG_TUD_CDC) + \
+                       (TUD_HID_DESC_LEN * CFG_TUD_HID) + \
+                       (TUD_RPI_RESET_DESC_LEN))
+
+enum
+{
+    ITF_NUM_CDC,
+    ITF_NUM_CDC_DATA,
+    ITF_NUM_HID,
+    ITF_NUM_RST,
+    ITF_NUM_TOTAL
+};
+
+#define USBD_MAX_POWER_MA (250)
 
 static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
-    TUD_CONFIG_DESCRIPTOR(1, USBD_ITF_MAX, USBD_STR_0, USBD_DESC_LEN,
-        USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
+    TUD_CONFIG_DESCRIPTOR(
+        1,
+        ITF_NUM_TOTAL,
+        USBD_STR_LANGUAGE,
+        USBD_DESC_LEN,
+        TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,
+        USBD_MAX_POWER_MA
+    ),
 
-    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_0, USBD_STR_CDC_0, USBD_CDC_0_EP_CMD,
-        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_0_EP_OUT, USBD_CDC_0_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
+    TUD_CDC_DESCRIPTOR(
+        ITF_NUM_CDC,
+        USBD_STR_CDC_PORT_NAME,
+        USBD_CDC_CMD_EP, USBD_CDC_CMD_SIZE,
+        USBD_CDC_DATA_EP & 0x7F,
+        USBD_CDC_DATA_EP, USBD_CDC_DATA_SIZE
+    ),
 
-    TUD_CDC_DESCRIPTOR(USBD_ITF_CDC_1, USBD_STR_CDC_1, USBD_CDC_1_EP_CMD,
-        USBD_CDC_CMD_MAX_SIZE, USBD_CDC_1_EP_OUT, USBD_CDC_1_EP_IN, USBD_CDC_IN_OUT_MAX_SIZE),
-    
-    TUD_RPI_RESET_DESCRIPTOR(USBD_ITF_RPI_RESET, USBD_STR_RPI_RESET)
+    TUD_HID_DESCRIPTOR(
+        ITF_NUM_HID,
+        USBD_STR_HID_PORT_NAME,
+        HID_ITF_PROTOCOL_NONE,
+        sizeof(desc_hid_report),
+        USBD_HID_EP,
+        USBD_HID_BUFSIZE,
+        USBD_HID_POLL_INTERVAL
+    ),
+
+    TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RST, USBD_STR_RST_PORT_NAME)
 };
 
 static char usbd_serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 
-static const char *const usbd_desc_str[] = {
-    [USBD_STR_MANUF] = USBD_MANUFACTURER,
+static const char* const usbd_desc_str[] = {
+    [USBD_STR_MANUFACTURER] = USBD_MANUFACTURER,
     [USBD_STR_PRODUCT] = USBD_PRODUCT,
-    [USBD_STR_SERIAL] = usbd_serial_str,
-    [USBD_STR_CDC_0] = "LED Matrix CDC Debug Port",
-    [USBD_STR_CDC_1] = "LED Matrix CDC Control Port",
-    [USBD_STR_RPI_RESET] = "LED Matrix Reset Port"
+    [USBD_STR_SERIAL_NUMBER] = usbd_serial_str,
+    [USBD_STR_CDC_PORT_NAME] = "LED Matrix CDC Debug Port",
+    [USBD_STR_HID_PORT_NAME] = "LED Matrix HID Control Port",
+    [USBD_STR_RST_PORT_NAME] = "LED Matrix Reset Port"
 };
 
-const uint8_t *tud_descriptor_device_cb(void) {
-    return (const uint8_t *)&usbd_desc_device;
-}
+const uint8_t* tud_descriptor_device_cb(void) { return (const uint8_t*)&usbd_desc_device; }
+const uint8_t* tud_descriptor_configuration_cb(__unused uint8_t index) { return usbd_desc_cfg; }
+const uint8_t* tud_hid_descriptor_report_cb(uint8_t instance) { return (const uint8_t*)desc_hid_report; }
 
-const uint8_t *tud_descriptor_configuration_cb(__unused uint8_t index) {
-    return usbd_desc_cfg;
-}
+const uint16_t* tud_descriptor_string_cb(uint8_t index, __unused uint16_t langid)
+{
+    static uint16_t desc_str[USBD_DESC_STR_MAX] = { 0 };
 
-const uint16_t *tud_descriptor_string_cb(uint8_t index, __unused uint16_t langid) {
-#ifndef USBD_DESC_STR_MAX
-#define USBD_DESC_STR_MAX (64)
-#elif USBD_DESC_STR_MAX > 127
-#error USBD_DESC_STR_MAX too high (max is 127).
-#elif USBD_DESC_STR_MAX < 17
-#error USBD_DESC_STR_MAX too low (min is 17).
-#endif
-    static uint16_t desc_str[USBD_DESC_STR_MAX];
-
-    // Assign the SN using the unique flash id
-    if (!usbd_serial_str[0]) {
+    if (!usbd_serial_str[0])
+    {
         pico_get_unique_board_id_string(usbd_serial_str, sizeof(usbd_serial_str));
     }
 
     uint8_t len;
-    if (index == 0) {
+    if (index == USBD_STR_LANGUAGE)
+    {
         desc_str[1] = 0x0409; // supported language is English
         len = 1;
-    } else {
-        if (index >= sizeof(usbd_desc_str) / sizeof(usbd_desc_str[0])) {
+    }
+    else
+    {
+        if (index >= sizeof(usbd_desc_str) / sizeof(usbd_desc_str[0]))
+        {
             return NULL;
         }
-        const char *str = usbd_desc_str[index];
-        for (len = 0; len < USBD_DESC_STR_MAX - 1 && str[len]; ++len) {
+
+        const char* str = usbd_desc_str[index];
+        for (len = 0; len < USBD_DESC_STR_MAX - 1 && str[len]; ++len)
+        {
             desc_str[1 + len] = str[len];
         }
     }
 
     // first byte is length (including header), second byte is string type
-    desc_str[0] = (uint16_t) ((TUSB_DESC_STRING << 8) | (2 * len + 2));
+    desc_str[0] = (uint16_t)((TUSB_DESC_STRING << 8) | (2 * len + 2));
 
     return desc_str;
 }
