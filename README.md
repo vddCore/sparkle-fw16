@@ -95,11 +95,12 @@ there.
     
       7   6   5   4   3   2   1   0
     +---+---+---+---+---+---+---+---+
-    | x | x | x | x | x | x | D | S |
+    | x | x | x | x | x | I | D | S |
     +---+---+---+---+---+---+---+---+
     
     [S]: SLEEP# pin (1 = on, 0 = off)
     [D]: DIP-switch pin (1 = on, 0 = off)
+    [I]: INTB pin (1 = on, 0 = off)
     [x]: reserved
 ```
 

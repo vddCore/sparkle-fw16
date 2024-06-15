@@ -23,31 +23,50 @@ bool usb_control_connected(void)
 
 int32_t usb_control_read(uint8_t* buffer, uint32_t length)
 {
-    int32_t rc = PICO_ERROR_NO_DATA;
+    if (!length) return 0;
 
-    if (usb_control_connected() && tud_cdc_n_available(USB_CONTROL_ITF))
+    static uint64_t last_write_avail_time;
+    int32_t total_read = 0;
+    
+    if (usb_control_connected())
     {
-        int32_t count = (int32_t)tud_cdc_n_read(
-            USB_CONTROL_ITF,
-            buffer,
-            length
-        );
-        
-        rc = count ? count : PICO_ERROR_NO_DATA;
+        for (int32_t i = 0; i < length;)
+        {
+            int32_t remaining = length - i;
+            int32_t available = (int32_t)tud_cdc_n_available(USB_CONTROL_ITF);
+
+            if (available)
+            {
+                int32_t read_count = (int32_t)tud_cdc_n_read(
+                    USB_CONTROL_ITF,
+                    buffer + i,
+                    (uint32_t)remaining
+                );
+
+                i += read_count;
+                total_read += read_count;
+                last_write_avail_time = time_us_64();
+            }
+            else
+            {
+                if (time_us_64() > last_write_avail_time + USB_CONTROL_READ_BUFFER_TIMEOUT_US)
+                    break;
+            }
+        }
     }
     else
     {
-        tud_task();
+        last_write_avail_time = 0;
     }
 
-    return rc;
+    return total_read;
 }
 
 int32_t usb_control_write(uint8_t* data, uint32_t length)
 {
     if (!length) return 0;
     
-    static uint64_t last_avail_time;
+    static uint64_t last_write_avail_time;
 
     uint32_t total_written = 0;
     int32_t rc = PICO_ERROR_GENERIC;
@@ -75,7 +94,7 @@ int32_t usb_control_write(uint8_t* data, uint32_t length)
                 
                 i += written;
                 total_written += written;
-                last_avail_time = time_us_64();
+                last_write_avail_time = time_us_64();
             }
             else
             {
@@ -84,7 +103,7 @@ int32_t usb_control_write(uint8_t* data, uint32_t length)
 
                 if (!usb_control_connected()
                     || (!tud_cdc_n_write_available(USB_CONTROL_ITF)
-                        && time_us_64() > last_avail_time + USB_CONTROL_BUFFER_TIMEOUT_US))
+                        && time_us_64() > last_write_avail_time + USB_CONTROL_WRITE_BUFFER_TIMEOUT_US))
                 {
                     rc = PICO_ERROR_TIMEOUT;
                     break;
@@ -96,7 +115,7 @@ int32_t usb_control_write(uint8_t* data, uint32_t length)
     }
     else
     {
-        last_avail_time = 0;
+        last_write_avail_time = 0;
     }
 
     return rc;

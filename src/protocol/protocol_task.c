@@ -6,6 +6,7 @@
 
 #include "sparkle_protocol.h"
 #include "ssp_commands_sc.h"
+#include "ssp_commands_cc.h"
 
 #include "protocol_task.h"
 
@@ -23,9 +24,9 @@ static ssp_cmd_handler_t sc_cmd_registry[SSP_SC_CMD_MAX] = {
 };
 
 static ssp_cmd_handler_t cc_cmd_registry[SSP_CC_CMD_MAX] = {
-    [SSP_CC_CMD_SET_GLOBAL_BRIGHTNESS] = NULL,
-    [SSP_CC_CMD_GET_GLOBAL_BRIGHTNESS] = NULL,
-    [SSP_CC_CMD_GET_DIMENSIONS] = NULL
+    [SSP_CC_CMD_SET_GLOBAL_BRIGHTNESS] = cc_set_global_brightness,
+    [SSP_CC_CMD_GET_GLOBAL_BRIGHTNESS] = cc_get_global_brightness,
+    [SSP_CC_CMD_GET_DIMENSIONS] = cc_get_dimensions
 };
 
 static ssp_cmd_handler_t di_cmd_registry[SSP_DI_CMD_MAX] = {
@@ -44,7 +45,7 @@ static void serial_protocol_dispatch_sc_cmd(uint8_t cmd_id, sparkle_context_t* s
         if (handler)
         {
             ssp_cmd_result_e cmd_result;
-            if ((cmd_result = handler(sparkle, data_buffer + 1, read_count - 1)) < 0)
+            if ((cmd_result = handler(sparkle, data_buffer + 1, (size_t)(read_count - 1))) < 0)
             {
                 log_error("Command group 0x%02X, command 0x%02X has failed with error code %d.",
                     SSP_CMDGROUP_SYSTEM_CONTROL,
@@ -72,7 +73,7 @@ static void serial_protocol_dispatch_cc_cmd(uint8_t cmd_id, sparkle_context_t* s
         if (handler)
         {
             ssp_cmd_result_e cmd_result;
-            if ((cmd_result = handler(sparkle, data_buffer + 1, read_count - 1)) < 0)
+            if ((cmd_result = handler(sparkle, data_buffer + 1, (size_t)(read_count - 1))) < 0)
             {
                 log_error("Command group 0x%02X, command 0x%02X has failed with error code %d.",
                     SSP_CMDGROUP_CONTROLLER_CONFIGURATION,
@@ -100,7 +101,7 @@ static void serial_protocol_dispatch_di_cmd(uint8_t cmd_id, sparkle_context_t* s
         if (handler)
         {
             ssp_cmd_result_e cmd_result;
-            if ((cmd_result = handler(sparkle, data_buffer + 1, read_count - 1)) < 0)
+            if ((cmd_result = handler(sparkle, data_buffer + 1, (size_t)(read_count - 1))) < 0)
             {
                 log_error("Command group 0x%02X, command 0x%02X has failed with error code %d.",
                     SSP_CMDGROUP_DISPLAY_INTERACTION,
@@ -124,6 +125,8 @@ void serial_protocol_task(sparkle_context_t* sparkle)
     if (!usb_control_connected())
         return;
 
+    memset(data_buffer, 0, sizeof(data_buffer));
+    
     int32_t read_count = -1;
     if ((read_count = usb_control_read(data_buffer, sizeof(data_buffer))) > 0)
     {
@@ -132,6 +135,8 @@ void serial_protocol_task(sparkle_context_t* sparkle)
         uint8_t group_id = SSP_CMDGROUP(cmd_byte);
         uint8_t cmd_id = SSP_CMD(cmd_byte);
 
+        log_info("CMDGROUP %d, CMD_ID %d, READ_COUNT %d", group_id, cmd_id, read_count);
+        
         if (group_id < SSP_CMDGROUP_MAX)
         {
             switch (group_id)

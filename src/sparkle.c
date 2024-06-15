@@ -47,7 +47,7 @@ static int32_t sparkle_led_matrix_init(sparkle_context_t* sparkle)
 sparkle_context_t* sparkle_init(void)
 {
     sparkle_context_t* sparkle = (sparkle_context_t*)calloc(1, sizeof(sparkle_context_t));
-
+    
     if (!sparkle)
     {
         while (true)
@@ -97,6 +97,8 @@ _Noreturn void sparkle_main(sparkle_context_t* sparkle)
 {    
     log_info("Entering main system loop.");
 
+    led_matrix_fill(255);
+    
     while (true)
     {
         serial_protocol_task(sparkle);

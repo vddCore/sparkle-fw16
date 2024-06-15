@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME}
     protocol/ssp_commands_sc.h
     pins.c
     pins.h
+    protocol/ssp_commands_cc.c
+    protocol/ssp_commands_cc.h
 )
 
 target_link_libraries(${PROJECT_NAME}

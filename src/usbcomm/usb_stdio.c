@@ -2,8 +2,9 @@
 
 #if (CFG_TUD_ENABLED | TUSB_OPT_DEVICE_ENABLED) && CFG_TUD_CDC
 #include <pico/binary_info.h>
-#include <pico/stdio/driver.h>
 #include <pico/mutex.h>
+#include <pico/time.h>
+#include <pico/stdio/driver.h>
 
 #include "usb_stdio.h"
 #include "usb_task.h"
@@ -75,7 +76,7 @@ static int usb_stdio_pull_data(char* buffer, int length)
     {
         if (!mutex_try_enter_block_until(&usb_stdio_mutex, make_timeout_time_ms(PICO_STDIO_DEADLOCK_TIMEOUT_MS)))
         {
-            return PICO_ERROR_NO_DATA;
+            return PICO_ERROR_TIMEOUT;
         }
         
         if (usb_stdio_connected() && tud_cdc_n_available(USB_STDIO_ITF))

@@ -63,19 +63,19 @@ is3741_err_t is3741_init(uint8_t i2c_address, is3741_state_t** out_state)
         log_error("Initialization failure (shutdown).");
         goto __failure;
     }
-    
+
     if (is3741_set_global_current(new_state, 255) < 0)
     {
         log_error("Initialization failure (current).");
         goto __failure;
     }
-    
+
     if (is3741_enable(new_state, true) < 0)
     {
         log_error("Initialization failure (re-enable).");
         goto __failure;
     }
-    
+
     *out_state = new_state;
     return IS3741_ERR_OK;
 
@@ -95,10 +95,10 @@ void is3741_exit(is3741_state_t* state)
     free(state);
 }
 
-is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* pixel)
+is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* out_pixel)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (is3741_select_page(state, pwm_page) < 0)
     {
         log_error("Unable to select PWM page %d.", pwm_page);
@@ -112,19 +112,19 @@ is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_p
         return IS3741_ERR_I2C_WRITE;
     }
 
-    if(is3741_read_reg8(state, led_id, pixel) < 0)
+    if (is3741_read_reg8(state, led_id, out_pixel) < 0)
     {
         log_error("Pixel register read error.");
         return IS3741_ERR_REG_READ;
     }
-    
+
     return IS3741_ERR_OK;
 }
 
 is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t brightness)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (is3741_select_page(state, pwm_page) < 0)
     {
         log_error("Unable to select PWM page %d.", pwm_page);
@@ -144,7 +144,7 @@ is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_p
 is3741_err_t is3741_unlock_crwl(is3741_state_t* state)
 {
     EXIT_IF_STATE_NULL;
-    
+
     uint8_t data[] = { IS3741_REG_CRWL, 0b11000101 };
     if (i2c_write_stop(state, data) < 0)
     {
@@ -158,7 +158,7 @@ is3741_err_t is3741_unlock_crwl(is3741_state_t* state)
 is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (page >= IS3741_PAGE_MAX)
     {
         log_error("Attempt to select page register %d, which is out of range.", page);
@@ -171,10 +171,10 @@ is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page)
          * An attempt to set a page to the
          * currently selected one is a no-op.
          **/
-        
+
         return IS3741_ERR_OK;
     }
-    
+
     if (is3741_unlock_crwl(state) < 0)
     {
         log_error("Unable to unlock CRWL register.");
@@ -195,13 +195,13 @@ is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page)
 is3741_err_t is3741_reset(is3741_state_t* state)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
         return IS3741_ERR_PAGESELECT;
     }
-    
+
     uint8_t data[] = { IS3741_FUNCREG_RESET, 0xAE };
     if (i2c_write_stop(state, data) < 0)
     {
@@ -210,20 +210,20 @@ is3741_err_t is3741_reset(is3741_state_t* state)
     }
 
     sleep_ms(10);
-    
+
     return IS3741_ERR_OK;
 }
 
 is3741_err_t is3741_enable(is3741_state_t* state, bool enable)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
         return IS3741_ERR_PAGESELECT;
     }
-    
+
     uint8_t cfg_byte = 0;
     if (is3741_read_config_register(state, &cfg_byte) < 0)
     {
@@ -231,14 +231,8 @@ is3741_err_t is3741_enable(is3741_state_t* state, bool enable)
         return IS3741_ERR_REG_READ;
     }
 
-    if (enable)
-    {
-        cfg_byte |= IS3741_CONFIG_SSD;    
-    }
-    else
-    {
-        cfg_byte &= ~(IS3741_CONFIG_SSD);
-    }
+    if (enable) cfg_byte |= IS3741_CONFIG_SSD;
+    else cfg_byte &= ~(IS3741_CONFIG_SSD);
 
     uint8_t data[] = { IS3741_FUNCREG_CONFIG, cfg_byte };
     if (i2c_write_stop(state, data) < 0)
@@ -246,14 +240,14 @@ is3741_err_t is3741_enable(is3741_state_t* state, bool enable)
         log_error("I2C write error.");
         return IS3741_ERR_I2C_WRITE;
     }
-    
+
     return IS3741_ERR_OK;
 }
 
 is3741_err_t is3741_set_sws_config(is3741_state_t* state, uint8_t sws_value)
 {
     EXIT_IF_STATE_NULL;
-    
+
     if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
     {
         log_error("Unable to select the function page.");
@@ -275,7 +269,7 @@ is3741_err_t is3741_set_sws_config(is3741_state_t* state, uint8_t sws_value)
         log_error("I2C write error.");
         return IS3741_ERR_I2C_WRITE;
     }
-    
+
     return IS3741_ERR_OK;
 }
 
@@ -319,6 +313,25 @@ is3741_err_t is3741_set_global_current(is3741_state_t* state, uint8_t brightness
     return IS3741_ERR_OK;
 }
 
+is3741_err_t is3741_get_global_current(is3741_state_t* state, uint8_t* out_brightness)
+{
+    EXIT_IF_STATE_NULL;
+
+    if (is3741_select_page(state, IS3741_PAGE_FUNCTION) < 0)
+    {
+        log_error("Unable to select the function page.");
+        return IS3741_ERR_PAGESELECT;
+    }
+
+    if (is3741_read_reg8(state, IS3741_FUNCREG_GLOBAL_CURRENT, out_brightness) < 0)
+    {
+        log_error("Global current register read error.");
+        return IS3741_ERR_REG_READ;
+    }
+
+    return IS3741_ERR_OK;
+}
+
 is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness)
 {
     EXIT_IF_STATE_NULL;
@@ -333,7 +346,7 @@ is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness)
     uint8_t led_scale_all[IS3741_LED_SCALE1_SZ + 1];
     memset(led_scale_all, brightness, IS3741_LED_SCALE1_SZ + 1);
     led_scale_all[0] = 0;
-    
+
     if (i2c_write_stop(state, led_scale_all) < 0)
     {
         log_error("I2C write error (1/2).");
@@ -364,7 +377,7 @@ is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byt
         log_error("Unable to select the function page.");
         return IS3741_ERR_PAGESELECT;
     }
-    
+
     if (is3741_read_reg8(state, IS3741_FUNCREG_CONFIG, cfg_byte))
     {
         log_error("Unable to read the configuration register.");

@@ -69,13 +69,14 @@ typedef enum is3741_err
 is3741_err_t is3741_init(uint8_t i2c_address, is3741_state_t** out_state);
 void is3741_exit(is3741_state_t* state);
 is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t brightness);
-is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* pixel);
+is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* out_pixel);
 is3741_err_t is3741_unlock_crwl(is3741_state_t* state);
 is3741_err_t is3741_select_page(is3741_state_t* state, uint8_t page);
 is3741_err_t is3741_reset(is3741_state_t* state);
 is3741_err_t is3741_enable(is3741_state_t* state, bool enable);
 is3741_err_t is3741_set_sws_config(is3741_state_t* state, uint8_t sws_value);
 is3741_err_t is3741_set_pwm_freq(is3741_state_t* state, uint8_t pfs_value);
+is3741_err_t is3741_get_global_current(is3741_state_t* state, uint8_t* out_brightness);
 is3741_err_t is3741_set_global_current(is3741_state_t* state, uint8_t brightness);
 is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness);
 is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byte);

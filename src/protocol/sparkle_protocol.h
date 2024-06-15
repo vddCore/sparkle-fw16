@@ -5,8 +5,8 @@
 
 #include "../sparkle.h"
 
-#define SSP_CMDGROUP(x) x >> 8;
-#define SSP_CMD(x) x & 0xFF;
+#define SSP_CMDGROUP(x) x >> 4;
+#define SSP_CMD(x) x & 0x0F;
 
 typedef enum ssp_cmd_result
 {
