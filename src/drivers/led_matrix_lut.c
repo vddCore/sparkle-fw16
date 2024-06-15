@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "led_matrix.h"
+#include <drivers/led_matrix.h>
 
 #if LED_MATRIX_USE_EVT_LUT
 const uint16_t LED_MATRIX_LUT[LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT] = {

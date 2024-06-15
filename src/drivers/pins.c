@@ -1,6 +1,6 @@
-﻿#include "pins.h"
+﻿#include <hardware/gpio.h>
 
-#include <hardware/gpio.h>
+#include "drivers/pins.h"
 
 void pins_init(void)
 {

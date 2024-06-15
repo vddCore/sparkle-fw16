@@ -1,10 +1,11 @@
 ﻿#include <pico/stdio.h>
 
-#include "pins.h"
-#include "usbcomm/usb_task.h"
-#include "usbcomm/usb_stdio.h"
+#include "drivers/usbcomm/usb_task.h"
+#include "drivers/usbcomm/usb_stdio.h"
 
-#include "sparkle.h"
+#include "sparkle/kernel.h"
+
+#include "drivers/pins.h"
 
 int main(void)
 {
@@ -13,12 +14,12 @@ int main(void)
     usb_task_init();
     usb_stdio_init();
 
-    sparkle_context_t* sparkle = sparkle_init();
-    sparkle_main(sparkle);
+    kernel_context_t* sparkle = kernel_init();
+    kernel_main(sparkle);
 
     /*
      * Execution should never reach this point.
      */
-    sparkle_exit(sparkle);
+    kernel_exit(sparkle);
     return 0;
 }

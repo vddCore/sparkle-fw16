@@ -1,7 +1,7 @@
 ﻿#include <tusb.h>
 #include <pico/unique_id.h>
 
-#include "usb_reset_interface.h"
+#include "drivers/usbcomm/usb_reset_interface.h"
 
 #define PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
 

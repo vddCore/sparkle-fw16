@@ -1,9 +1,8 @@
 ﻿#include <stdlib.h>
 
-#include "is3741.h"
-#include "log.h"
-
-#include "led_matrix.h"
+#include "drivers/led_matrix.h"
+#include "drivers/is3741.h"
+#include "debug/log.h"
 
 static is3741_state_t* _is3741 = NULL;
 

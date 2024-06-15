@@ -3,8 +3,8 @@
 #include <hardware/watchdog.h>
 #include <device/usbd_pvt.h>
 
-#include "usb_stdio.h"
-#include "usb_reset_interface.h"
+#include "drivers/usbcomm/usb_stdio.h"
+#include "drivers/usbcomm/usb_reset_interface.h"
 
 static uint8_t itf_num;
 

@@ -7,7 +7,7 @@
 #include <pico/mutex.h>
 #include <hardware/irq.h>
 
-#include "usb_task.h"
+#include "drivers/usbcomm/usb_task.h"
 
 static bool is_initialized = false;
 

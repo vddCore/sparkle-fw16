@@ -1,10 +1,11 @@
 ﻿#include <tusb.h>
 
-#include "../log.h"
+#include "debug/log.h"
 
 #if (CFG_TUD_ENABLED | TUSB_OPT_DEVICE_ENABLED) && CFG_TUD_HID
-#include "usb_control.h"
-#include "usb_task.h"
+
+#include "drivers/usbcomm/usb_control.h"
+#include "drivers/usbcomm/usb_task.h"
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen) {
     if (!usb_task_is_initialized())

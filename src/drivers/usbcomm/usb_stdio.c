@@ -6,8 +6,8 @@
 #include <pico/time.h>
 #include <pico/stdio/driver.h>
 
-#include "usb_stdio.h"
-#include "usb_task.h"
+#include "drivers/usbcomm/usb_stdio.h"
+#include "drivers/usbcomm/usb_task.h"
 
 static mutex_t usb_stdio_mutex;
 

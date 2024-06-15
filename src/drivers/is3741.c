@@ -5,10 +5,10 @@
 
 #include <hardware/i2c.h>
 
-#include "log.h"
-#include "is3741.h"
+#include "sparkle/kernel.h"
+#include "debug/log.h"
 
-#include "sparkle.h"
+#include "drivers/is3741.h"
 
 #define i2c_write_stop(state, buf) i2c_write_blocking(i2c1, state->i2c_address, buf, sizeof(buf), false)
 #define i2c_write_stop_sz(state, buf, sz) i2c_write_blocking(i2c1, state->i2c_address, buf, sz, false)

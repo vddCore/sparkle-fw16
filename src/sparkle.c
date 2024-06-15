@@ -7,19 +7,19 @@
 #include <pico/stdlib.h>
 #include <hardware/i2c.h>
 
-#include "log.h"
-#include "pins.h"
-#include "is3741.h"
-#include "led_matrix.h"
+#include "debug/log.h"
+#include "drivers/pins.h"
+#include "drivers/is3741.h"
+#include "drivers/led_matrix.h"
 
-#include "sparkle.h"
+#include "sparkle/kernel.h"
 
-static void sparkle_i2c_init(sparkle_context_t* sparkle)
+static void kernel_i2c_init(kernel_context_t* sparkle)
 {
     i2c_init(SPARKLE_I2C_INSTANCE, IS3741_I2C_FREQ);
 }
 
-static int32_t sparkle_led_matrix_init(sparkle_context_t* sparkle)
+static int32_t kernel_led_matrix_init(kernel_context_t* sparkle)
 {
     int32_t result = (int32_t)is3741_init(IS3741_I2C_ADDR, &sparkle->is3741);
 
@@ -42,9 +42,9 @@ static int32_t sparkle_led_matrix_init(sparkle_context_t* sparkle)
     return result;
 }
 
-sparkle_context_t* sparkle_init(void)
+kernel_context_t* kernel_init(void)
 {
-    sparkle_context_t* sparkle = (sparkle_context_t*)calloc(1, sizeof(sparkle_context_t));
+    kernel_context_t* sparkle = (kernel_context_t*)calloc(1, sizeof(kernel_context_t));
     
     if (!sparkle)
     {
@@ -55,9 +55,9 @@ sparkle_context_t* sparkle_init(void)
         }
     }
 
-    sparkle_i2c_init(sparkle);
+    kernel_i2c_init(sparkle);
 
-    if (sparkle_led_matrix_init(sparkle) < 0)
+    if (kernel_led_matrix_init(sparkle) < 0)
     {
         free(sparkle);
 
@@ -71,7 +71,7 @@ sparkle_context_t* sparkle_init(void)
     return sparkle;
 }
 
-_Noreturn void sparkle_panic(void)
+_Noreturn void kernel_panic(void)
 {
     while (true)
     {
@@ -80,7 +80,7 @@ _Noreturn void sparkle_panic(void)
     }
 }
 
-void sparkle_exit(sparkle_context_t* sparkle)
+void kernel_exit(kernel_context_t* sparkle)
 {
     if (!sparkle)
     {
@@ -91,7 +91,7 @@ void sparkle_exit(sparkle_context_t* sparkle)
     free(sparkle);
 }
 
-_Noreturn void sparkle_main(sparkle_context_t* sparkle)
+_Noreturn void kernel_main(kernel_context_t* sparkle)
 {    
     log_info("Entering main system loop.");
     
