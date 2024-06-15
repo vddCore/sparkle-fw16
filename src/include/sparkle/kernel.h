@@ -24,7 +24,7 @@ typedef struct kernel_context
 } kernel_context_t;
 
 kernel_context_t* kernel_init(void);
-_Noreturn void kernel_main(kernel_context_t* sparkle);
-void kernel_exit(kernel_context_t* sparkle);
+_Noreturn void kernel_main(kernel_context_t* kernel);
+void kernel_exit(kernel_context_t* kernel);
 
 #endif // SPARKLE_H

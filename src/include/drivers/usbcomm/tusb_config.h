@@ -10,6 +10,6 @@
 #define CFG_TUD_VENDOR          (0)
 
 #define CFG_TUD_HID             (1)
-#define CFG_TUD_HID_EP_BUFSIZE  (307)
+#define CFG_TUD_HID_EP_BUFSIZE  (385)
 
 #endif //TUSB_CONFIG_H

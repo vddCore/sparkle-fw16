@@ -1,6 +1,9 @@
 ﻿#ifndef USB_TASK_H
 #define USB_TASK_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #define USB_TASK_INTERVAL_US 1000
 #define USB_TASK_RX_CALLBACKS_MAX CFG_TUD_CDC + 1 // +1 because the reset interface exists.
 

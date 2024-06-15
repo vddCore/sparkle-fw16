@@ -77,7 +77,7 @@ static const tusb_desc_device_t usbd_desc_device = {
         HID_REPORT_ID(REPORT_ID_LED_MATRIX_LARGE_REQ)              \
         HID_USAGE(0x03),                                           \
         HID_REPORT_SIZE(8),                                        \
-        HID_REPORT_COUNT_N(306, 2),                                \
+        HID_REPORT_COUNT_N(384, 2),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
     HID_COLLECTION_END
 

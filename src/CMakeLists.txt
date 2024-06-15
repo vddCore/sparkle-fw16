@@ -10,7 +10,7 @@ add_executable(${PROJECT_NAME}
     drivers/usbcomm/usb_control.c
     drivers/usbcomm/usb_task.c
     drivers/pins.c
-    sparkle.c
+    kernel.c
     main.c
 )
 
