@@ -188,8 +188,10 @@ uint16_t tud_hid_get_report_cb(
             is3741_read_id_register(_kernel->is3741, &_devinfo.id_reg);
             is3741_read_config_register(_kernel->is3741, &_devinfo.config_reg);
             is3741_get_global_current(_kernel->is3741, &_devinfo.global_brightness);
+            
+            _devinfo.timeout_ms = _kernel->sleep_timeout_ms;
 
-            memcpy(&_devinfo, buffer, sizeof(_devinfo));
+            memcpy(buffer, &_devinfo, sizeof(_devinfo));
             break;
         }
 

@@ -12,6 +12,7 @@ typedef struct glitter_device_info
     uint8_t global_brightness;
     uint8_t display_width;     /* 9 for the official LED matrix module */
     uint8_t display_height;    /* 34 for the official LED matrix module */
+    int32_t timeout_ms;
 } glitter_device_info_t;
 
 typedef enum glitter_basic_command
