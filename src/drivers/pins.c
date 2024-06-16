@@ -1,4 +1,5 @@
 ﻿#include <hardware/gpio.h>
+#include <hardware/i2c.h>
 
 #include "drivers/pins.h"
 
@@ -26,6 +27,8 @@ void pins_init(void)
     
     gpio_set_function(PIN_GPIO_SCL, GPIO_FUNC_I2C);
     gpio_pull_up(PIN_GPIO_SCL);
+
+    i2c_init(PINS_I2C_INSTANCE, PINS_I2C_FREQ);
 }
 
 void pins_set_is3741_sdb(bool enable)

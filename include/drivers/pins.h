@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
+#define PINS_I2C_INSTANCE i2c1
+#define PINS_I2C_FREQ 1000 * 1000 // kHz
+
 #define PIN_GPIO_SLEEP  0
 #define PIN_GPIO_DIP1  25
 #define PIN_GPIO_SDA   26

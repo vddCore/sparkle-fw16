@@ -1,25 +1,29 @@
 ﻿#ifndef KERNEL_H
 #define KERNEL_H
 
-#include <hardware/i2c.h>
-
 #include "drivers/is3741.h"
 
 #define SPARKLE_VERSION_MAJOR 0
 #define SPARKLE_VERSION_MINOR 1
 #define SPARKLE_VERSION_PATCH 0
 
-#define SPARKLE_I2C_INSTANCE i2c1
+#define KERNEL_PANIC_INTERVAL_MS 100
 
-#define SPARKLE_PANIC_SLEEP_INTERVAL_MS 100
+#define KERNEL_STATEFLAG_SLEEPSTATE_MASK     0b00000110
+#define KERNEL_STATEFLAG_WAKE_ON_COMMAND_MASK 0b00000001
 
-#define SPARKLE_STATEFLAG_SLEEP_IGNORE    0b00001000
-#define SPARKLE_STATEFLAG_SLEEP_STATE     0b00000110
-#define SPARKLE_STATEFLAG_WAKE_ON_COMMAND 0b00000001
+typedef enum kernel_sleepstate
+{
+    KERNEL_SLEEPSTATE_AWAKE       = 0x00,
+    KERNEL_SLEEPSTATE_EC_SLEEP    = 0x01,
+    KERNEL_SLEEPSTATE_USB_SUSPEND = 0x02,
+    KERNEL_SLEEPSTATE_COMMAND     = 0x03
+} __attribute__((packed)) kernel_sleepstate_t;
 
 typedef struct kernel_context
 {
     is3741_state_t* is3741;
+    int32_t sleep_timeout_us;    /* -1: ignore all requests, 0: disable timeout */
     uint8_t state_flags;
 } kernel_context_t;
 
@@ -27,5 +31,7 @@ kernel_context_t* kernel_init(void);
 _Noreturn void kernel_main(kernel_context_t* kernel);
 _Noreturn void kernel_panic(const char* why);
 void kernel_exit(kernel_context_t* kernel);
+
+void kernel_set_sleep_state(kernel_sleepstate_t state);
 
 #endif // KERNEL_H

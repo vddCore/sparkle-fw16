@@ -34,7 +34,7 @@ void led_matrix_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bri
 
     int16_t dy = -abs(y2 - y1);
     int16_t sy = y1 < y2 ? 1 : -1;
-    
+
     int16_t err = dx + dy;
     int32_t sqerr;
 
@@ -69,7 +69,7 @@ void led_matrix_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bri
     }
 }
 
-void led_matrix_bitmap(uint8_t const* bitmap, size_t len)
+void led_matrix_set_pwm_bitmap(uint8_t const* bitmap, size_t len)
 {
     if (!bitmap)
     {
@@ -85,29 +85,64 @@ void led_matrix_bitmap(uint8_t const* bitmap, size_t len)
     
     for (size_t i = 0; i < len; i++)
     {
-        led_matrix_set_pixel_fast(
-            i % LED_MATRIX_WIDTH,
-            i / LED_MATRIX_WIDTH,
-            *(bitmap + i)
-        );
+        uint16_t pixel_info = LED_MATRIX_LUT[i];
+
+        uint8_t pwm_page = (pixel_info & 0x00FF);
+        uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
+
+        is3741_set_led_pwm(_is3741, pixel_id, pwm_page, bitmap[i]);
     }
 }
 
-void led_matrix_get_bitmap(uint8_t* buffer)
+void led_matrix_get_pwm_bitmap(uint8_t* buffer)
 {
-    for (uint8_t y = 0; y < LED_MATRIX_HEIGHT; y++)
+    for (uint8_t i = 0; i < LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT; i++)
     {
-        for (uint8_t x = 0; x < LED_MATRIX_WIDTH; x++)
-        {
-            uint32_t pixel_index = LED_MATRIX_XY_TO_LEDREG(x, y);
-            uint16_t pixel_info = LED_MATRIX_LUT[pixel_index];
+        uint16_t pixel_info = LED_MATRIX_LUT[i];
 
-            uint8_t pwm_page = (pixel_info & 0x00FF) == 0 ? IS3741_PAGE_PWM0 : IS3741_PAGE_PWM1;
-            uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
+        uint8_t pwm_page = (pixel_info & 0x00FF) == 0 ? IS3741_PAGE_PWM0 : IS3741_PAGE_PWM1;
+        uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
 
-            is3741_get_led(_is3741, pixel_id, pwm_page, buffer + pixel_index);
-        }
+        is3741_get_led_pwm(_is3741, pixel_id, pwm_page, buffer + i);
     }
+}
+
+void led_matrix_set_dc_scale_bitmap(const uint8_t* bitmap, size_t len)
+{
+    if (!bitmap)
+    {
+        log_error("bitmap == NULL.");
+        return;
+    }
+
+    if (len != LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT)
+    {
+        log_error("Bitmap length is not equal to %d", LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT);
+        return;
+    }
+
+    for (size_t i = 0; i < len; i++)
+    {
+        uint16_t pixel_info = LED_MATRIX_LUT[i];
+
+        uint8_t pwm_page = (pixel_info & 0x00FF);
+        uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
+
+        is3741_set_led_dc_scale(_is3741, pixel_id, pwm_page, bitmap[i]);
+    }
+}
+
+void led_matrix_get_dc_scale_bitmap(uint8_t* buffer)
+{
+    for (uint8_t i = 0; i < LED_MATRIX_WIDTH * LED_MATRIX_HEIGHT; i++)
+    {
+        uint16_t pixel_info = LED_MATRIX_LUT[i];
+
+        uint8_t pwm_page = (pixel_info & 0x00FF) == 0 ? IS3741_PAGE_DC_SCALE0 : IS3741_PAGE_DC_SCALE1;
+        uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
+
+        is3741_get_led_dc_scale(_is3741, pixel_id, pwm_page, buffer + i);
+    }   
 }
 
 uint8_t led_matrix_get_pixel_fast(uint8_t x, uint8_t y)
@@ -118,7 +153,7 @@ uint8_t led_matrix_get_pixel_fast(uint8_t x, uint8_t y)
     uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
 
     /* Why use a local when you can just clobber a parameter lmao. */
-    is3741_get_led(_is3741, pixel_id, pwm_page, &x);
+    is3741_get_led_pwm(_is3741, pixel_id, pwm_page, &x);
 
     return x;
 }
@@ -130,7 +165,7 @@ void led_matrix_set_pixel_fast(uint8_t x, uint8_t y, uint8_t brightness)
     uint8_t pwm_page = (pixel_info & 0x00FF) == 0 ? IS3741_PAGE_PWM0 : IS3741_PAGE_PWM1;
     uint8_t pixel_id = (pixel_info & 0xFF00) >> 8;
 
-    is3741_set_led(_is3741, pixel_id, pwm_page, brightness);
+    is3741_set_led_pwm(_is3741, pixel_id, pwm_page, brightness);
 }
 
 uint8_t led_matrix_get_pixel(uint8_t x, uint8_t y)

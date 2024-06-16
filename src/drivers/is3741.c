@@ -8,11 +8,13 @@
 #include "firmware/kernel.h"
 #include "debug/log.h"
 
+#include "drivers/pins.h"
 #include "drivers/is3741.h"
 
-#define i2c_write_stop(state, buf) i2c_write_blocking(i2c1, state->i2c_address, buf, sizeof(buf), false)
-#define i2c_write_stop_sz(state, buf, sz) i2c_write_blocking(i2c1, state->i2c_address, buf, sz, false)
-#define i2c_write_nostop(state, buf) i2c_write_blocking(i2c1, state->i2c_address, buf, sizeof(buf), true)
+
+#define i2c_write_stop(state, buf) i2c_write_blocking(PINS_I2C_INSTANCE, state->i2c_address, buf, sizeof(buf), false)
+#define i2c_write_stop_sz(state, buf, sz) i2c_write_blocking(PINS_I2C_INSTANCE, state->i2c_address, buf, sz, false)
+#define i2c_write_nostop(state, buf) i2c_write_blocking(PINS_I2C_INSTANCE, state->i2c_address, buf, sizeof(buf), true)
 
 #define EXIT_IF_STATE_NULL              \
     if (!state)                         \
@@ -95,7 +97,7 @@ void is3741_exit(is3741_state_t* state)
     free(state);
 }
 
-is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* out_pixel)
+is3741_err_t is3741_get_led_pwm(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t* out_value)
 {
     EXIT_IF_STATE_NULL;
 
@@ -112,7 +114,7 @@ is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_p
         return IS3741_ERR_I2C_WRITE;
     }
 
-    if (is3741_read_reg8(state, led_id, out_pixel) < 0)
+    if (is3741_read_reg8(state, led_id, out_value) < 0)
     {
         log_error("Pixel register read error.");
         return IS3741_ERR_REG_READ;
@@ -121,7 +123,7 @@ is3741_err_t is3741_get_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_p
     return IS3741_ERR_OK;
 }
 
-is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t brightness)
+is3741_err_t is3741_set_led_pwm(is3741_state_t* state, uint8_t led_id, uint8_t pwm_page, uint8_t value)
 {
     EXIT_IF_STATE_NULL;
 
@@ -131,13 +133,104 @@ is3741_err_t is3741_set_led(is3741_state_t* state, uint8_t led_id, uint8_t pwm_p
         return IS3741_ERR_PAGESELECT;
     }
 
-    uint8_t data[] = { led_id, brightness };
+    uint8_t data[] = { led_id, value };
     if (i2c_write_stop(state, data) < 0)
     {
         log_error("I2C write error.");
         return IS3741_ERR_I2C_WRITE;
     }
 
+    return IS3741_ERR_OK;
+}
+
+is3741_err_t is3741_get_led_dc_scale(is3741_state_t* state, uint8_t led_id, uint8_t dc_scale_page, uint8_t* out_value)
+{
+    EXIT_IF_STATE_NULL;
+
+    if (is3741_select_page(state, dc_scale_page) < 0)
+    {
+        log_error("Unable to select the LED DC scaling page %02X", dc_scale_page);
+        return IS3741_ERR_PAGESELECT;
+    }
+
+    uint8_t data[] = { led_id };
+    if (i2c_write_stop(state, data) < 0)
+    {
+        log_error("I2C write error.");
+        return IS3741_ERR_I2C_WRITE;
+    }
+
+    if (is3741_read_reg8(state, led_id, out_value) < 0)
+    {
+        log_error("DC scale register read error.");
+        return IS3741_ERR_REG_READ;
+    }
+
+    return IS3741_ERR_OK;
+}
+
+is3741_err_t is3741_set_led_dc_scale_global(is3741_state_t* state, uint8_t value)
+{
+    EXIT_IF_STATE_NULL;
+
+    if (is3741_select_page(state, IS3741_PAGE_DC_SCALE0) < 0)
+    {
+        log_error("Unable to select DC scale page (1/2).");
+        return IS3741_ERR_PAGESELECT;
+    }
+    
+    /**
+     * Need to set both pages so just
+     * use the larger one for size.
+     **/
+    uint8_t dc_values[IS3741_LED_PAGE0_SIZE + 1] = { 0 };
+
+    /**
+     * First byte is starting LED index.
+     * 
+     * Since this sets a global DC scale
+     * in one go, setting it to 0 is enough.
+     **/
+    memset(dc_values + 1, value, sizeof(dc_values) - 1);
+    
+    if (i2c_write_stop(state, dc_values) < 0)
+    {
+        log_error("I2C write error (LED page 1/2).");
+        return IS3741_ERR_I2C_WRITE;
+    }
+
+    if (is3741_select_page(state, IS3741_PAGE_DC_SCALE1) < 0)
+    {
+        log_error("Unable to select the function page (LED page 2/2).");
+        return IS3741_ERR_PAGESELECT;
+    }
+
+    if (i2c_write_stop_sz(state, dc_values, IS3741_LED_PAGE0_SIZE + 1) < 0)
+    {
+        log_error("I2C write error (2/2).");
+        return IS3741_ERR_I2C_WRITE;
+    }
+
+    return IS3741_ERR_OK;
+}
+
+is3741_err_t is3741_set_led_dc_scale(is3741_state_t* state, uint8_t led_id, uint8_t dc_scale_page, uint8_t value)
+{
+    EXIT_IF_STATE_NULL;
+
+    if (is3741_select_page(state, dc_scale_page) < 0)
+    {
+        log_error("Unable to select the LED DC scaling page %02X", dc_scale_page);
+        return IS3741_ERR_PAGESELECT;
+    }
+
+    uint8_t data[] = { led_id, value };
+    if (i2c_write_stop(state, data) < 0)
+    {
+        log_error("I2C write error.");
+        return IS3741_ERR_I2C_WRITE;
+    }
+    
     return IS3741_ERR_OK;
 }
 
@@ -332,42 +425,6 @@ is3741_err_t is3741_get_global_current(is3741_state_t* state, uint8_t* out_brigh
     return IS3741_ERR_OK;
 }
 
-is3741_err_t is3741_set_led_scaling(is3741_state_t* state, uint8_t brightness)
-{
-    EXIT_IF_STATE_NULL;
-
-    if (is3741_select_page(state, IS3741_PAGE_LED_SCALING1) < 0)
-    {
-        log_error("Unable to select the function page (1/2).");
-        return IS3741_ERR_PAGESELECT;
-    }
-
-    /* +1 for the initial LED index. */
-    uint8_t led_scale_all[IS3741_LED_SCALE1_SZ + 1];
-    memset(led_scale_all, brightness, IS3741_LED_SCALE1_SZ + 1);
-    led_scale_all[0] = 0;
-
-    if (i2c_write_stop(state, led_scale_all) < 0)
-    {
-        log_error("I2C write error (1/2).");
-        return IS3741_ERR_I2C_WRITE;
-    }
-
-    if (is3741_select_page(state, IS3741_PAGE_LED_SCALING2) < 0)
-    {
-        log_error("Unable to select the function page (2/2).");
-        return IS3741_ERR_PAGESELECT;
-    }
-
-    if (i2c_write_stop_sz(state, led_scale_all, IS3741_LED_SCALE2_SZ + 1) < 0)
-    {
-        log_error("I2C write error (2/2).");
-        return IS3741_ERR_I2C_WRITE;
-    }
-
-    return IS3741_ERR_OK;
-}
-
 is3741_err_t is3741_read_config_register(is3741_state_t* state, uint8_t* cfg_byte)
 {
     EXIT_IF_STATE_NULL;
@@ -411,7 +468,7 @@ is3741_err_t is3741_read_reg8(is3741_state_t* state, uint8_t reg, uint8_t* out_d
         return IS3741_ERR_I2C_WRITE;
     }
 
-    if (i2c_read_blocking(SPARKLE_I2C_INSTANCE, state->i2c_address, out_data, 1, false) < 0)
+    if (i2c_read_blocking(PINS_I2C_INSTANCE, state->i2c_address, out_data, 1, false) < 0)
     {
         log_error("I2C read error.");
         return IS3741_ERR_I2C_READ;

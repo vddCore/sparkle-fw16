@@ -109,11 +109,6 @@ stdio_driver_t stdio_usb = {
 
 bool usb_stdio_init(void)
 {
-    if (!usb_task_is_initialized())
-    {
-        return false;
-    }
-
     mutex_init(&usb_stdio_mutex);
     stdio_set_driver_enabled(&stdio_usb, true);
     

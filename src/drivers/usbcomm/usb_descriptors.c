@@ -10,10 +10,13 @@
 //==============================================================//
 #define USBD_VID (0x32AC) // Framework Computer Inc
 #define USBD_PID (0x0020) // LED Matrix Input Module
-#define USBD_DESC_STR_MAX (64)
 
+#define USBD_DESC_STR_MAX (96)
 #define USBD_MANUFACTURER "Framework Computer Inc"
 #define USBD_PRODUCT "LED Matrix Input Module | SPARKLE"
+#define USBD_CDC_PORT_NAME "LED Matrix CDC Debug Port"
+#define USBD_HID_PORT_NAME "LED Matrix HID Control Port"
+#define USBD_RST_PORT_NAME "LED Matrix Reset Port"
 
 enum
 {
@@ -63,7 +66,7 @@ static const tusb_desc_device_t usbd_desc_device = {
     HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                    \
     HID_USAGE(0x01),                                               \
     HID_COLLECTION(HID_COLLECTION_APPLICATION),                    \
-        HID_REPORT_ID(REPORT_ID_GET_PROPERTIES)                    \
+        HID_REPORT_ID(REPORT_ID_DEVICE_INFO)                       \
         HID_USAGE(0x02),                                           \
         HID_LOGICAL_MIN(0x00),                                     \
         HID_LOGICAL_MAX_N(0xFF, 2),                                \
@@ -77,8 +80,14 @@ static const tusb_desc_device_t usbd_desc_device = {
         HID_REPORT_COUNT(16),                                      \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
                                                                    \
-        HID_REPORT_ID(REPORT_ID_GRID_CNTL)                         \
+        HID_REPORT_ID(REPORT_ID_GRID_PWM_CNTL)                     \
         HID_USAGE(0x04),                                           \
+        HID_REPORT_SIZE(8),                                        \
+        HID_REPORT_COUNT_N(306, 2),                                \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
+                                                                   \
+        HID_REPORT_ID(REPORT_ID_GRID_DC_SCALE_CNTL)                \
+        HID_USAGE(0x05),                                           \
         HID_REPORT_SIZE(8),                                        \
         HID_REPORT_COUNT_N(306, 2),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
@@ -143,9 +152,9 @@ static const char* const usbd_desc_str[] = {
     [USBD_STR_MANUFACTURER] = USBD_MANUFACTURER,
     [USBD_STR_PRODUCT] = USBD_PRODUCT,
     [USBD_STR_SERIAL_NUMBER] = usbd_serial_str,
-    [USBD_STR_CDC_PORT_NAME] = "LED Matrix CDC Debug Port",
-    [USBD_STR_HID_PORT_NAME] = "LED Matrix HID Control Port",
-    [USBD_STR_RST_PORT_NAME] = "LED Matrix Reset Port"
+    [USBD_STR_CDC_PORT_NAME] = USBD_CDC_PORT_NAME,
+    [USBD_STR_HID_PORT_NAME] = USBD_HID_PORT_NAME,
+    [USBD_STR_RST_PORT_NAME] = USBD_RST_PORT_NAME
 };
 
 const uint8_t* tud_descriptor_device_cb(void) { return (const uint8_t*)&usbd_desc_device; }

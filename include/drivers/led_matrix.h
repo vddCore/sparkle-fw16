@@ -26,8 +26,12 @@ void led_matrix_clear(void);
 void led_matrix_fill(uint8_t brightness);
 
 void led_matrix_line(uint8_t x1, uint8_t y1,uint8_t x2, uint8_t y2, uint8_t brightness);
-void led_matrix_bitmap(const uint8_t* bitmap, size_t len);
-void led_matrix_get_bitmap(uint8_t* buffer);
+
+void led_matrix_set_pwm_bitmap(const uint8_t* bitmap, size_t len);
+void led_matrix_get_pwm_bitmap(uint8_t* buffer);
+
+void led_matrix_set_dc_scale_bitmap(const uint8_t* bitmap, size_t len);
+void led_matrix_get_dc_scale_bitmap(uint8_t* buffer);
 
 uint8_t led_matrix_get_pixel_fast(uint8_t x, uint8_t y);
 void led_matrix_set_pixel_fast(uint8_t x, uint8_t y, uint8_t brightness);

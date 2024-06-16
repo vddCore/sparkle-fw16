@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include <pico/stdlib.h>
-#include <hardware/i2c.h>
 
 #include "debug/log.h"
 #include "drivers/pins.h"
@@ -12,14 +11,6 @@
 #include "drivers/led_matrix.h"
 
 #include "firmware/kernel.h"
-
-#include <tusb.h>
-#include <device/usbd.h>
-
-static void kernel_i2c_init(kernel_context_t* kernel)
-{
-    i2c_init(SPARKLE_I2C_INSTANCE, IS3741_I2C_FREQ);
-}
 
 static int32_t kernel_led_matrix_init(kernel_context_t* kernel)
 {
@@ -31,7 +22,7 @@ static int32_t kernel_led_matrix_init(kernel_context_t* kernel)
     if (!result) result = (int32_t)is3741_set_sws_config(kernel->is3741, IS3741_SWS_SW1SW8);
 #endif
 
-    if (!result) result = is3741_set_led_scaling(kernel->is3741, 50);
+    if (!result) result = is3741_set_led_dc_scale_global(kernel->is3741, IS3741_DC_SCALE_DEFAULT);
     if (!result) result = is3741_set_pwm_freq(kernel->is3741, IS3741_PFS_29000HZ);
     
     if (!result)
@@ -53,15 +44,12 @@ kernel_context_t* kernel_init(void)
         kernel_panic("Unable to allocate memory for context structure.");
     }
 
-    kernel_i2c_init(kernel);
-
     if (kernel_led_matrix_init(kernel) < 0)
     {
         free(kernel);
         kernel_panic("Unable to initialize LED matrix.");
     }
 
-    tusb_init();
     return kernel;
 }
 
@@ -81,7 +69,7 @@ _Noreturn void kernel_panic(const char* why)
     while (true)
     {
         log_error("PANIC! %s", why);
-        sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
+        sleep_ms(KERNEL_PANIC_INTERVAL_MS);
     }
 }
 
@@ -91,9 +79,5 @@ _Noreturn void kernel_main(kernel_context_t* kernel)
     
     while (true)
     {
-        tud_task();
-        tud_task();
-        tud_task();
-        tud_task();
     }
 }
