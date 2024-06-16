@@ -11,13 +11,15 @@ void pins_init(void)
 
     gpio_set_function(PIN_GPIO_SLEEP, GPIO_FUNC_SIO);
     gpio_set_dir(PIN_GPIO_SLEEP, false);
+    gpio_pull_down(PIN_GPIO_SLEEP);
 
     gpio_set_function(PIN_GPIO_DIP1, GPIO_FUNC_SIO);
     gpio_set_dir(PIN_GPIO_DIP1, false);
-    gpio_pull_up(PIN_GPIO_DIP1);
+    gpio_pull_down(PIN_GPIO_DIP1);
 
     gpio_set_function(PIN_GPIO_INTB, GPIO_FUNC_SIO);
     gpio_set_dir(PIN_GPIO_INTB, false);
+    gpio_pull_down(PIN_GPIO_INTB);
 
     gpio_set_function(PIN_GPIO_SDA, GPIO_FUNC_I2C);
     gpio_pull_up(PIN_GPIO_SDA);

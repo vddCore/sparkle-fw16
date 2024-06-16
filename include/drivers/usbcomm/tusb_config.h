@@ -10,6 +10,10 @@
 #define CFG_TUD_VENDOR          (0)
 
 #define CFG_TUD_HID             (1)
-#define CFG_TUD_HID_EP_BUFSIZE  (385)
+#define CFG_TUD_HID_EP_BUFSIZE  (384)
+
+#define REPORT_ID_GET_PROPERTIES (0x01)
+#define REPORT_ID_BASIC_CMD      (0x02)
+#define REPORT_ID_GRID_CNTL      (0x03)
 
 #endif //TUSB_CONFIG_H

@@ -49,34 +49,34 @@ It's implemented on top of the USB HID stack and exposes 2 feature reports, one 
 requests like configuration and one for larger requests like pushing an entire image to a
 LED matrix module. The first byte of every payload denotes the command group and its ID.
 
-## Feature Report `0x03` - `GLITTER_SMALL_REQ`
+## Feature Report `0x01` - `GLITTER_SMALL_REQ`
 ### Group `0x0-`: system control (`Sc`)
 Excluding `Sc_exit_sleep` and `Sc_enter_sleep`, commands in this group will never trigger
 the wake-on-command mechanism.
 
 ```
 0x00 Sc_reboot_bootloader <- [void]
-  -> [void] _Noreturn
+  SET_REPORT -> [void] _Noreturn
 ```
 
 ```
 0x01 Sc_reboot_firmware <- [void]
-  -> [void] _Noreturn
+  SET_REPORT -> [void] _Noreturn
 ```
 
 ```
 0x02 Sc_enter_sleep <- [void]
-  -> [void]
-  ```
+  SET_REPORT -> [void]
+```
 
 ```
 0x03 Sc_exit_sleep <- [void]
-  -> [void]
+  SET_REPORT -> [void]
 ```
 
 ```
 0x04 Sc_wake_on_command <- <1> [enable: uint8_t]
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `enable`:
     0x00: disable wake-up on command
@@ -86,7 +86,7 @@ the wake-on-command mechanism.
 ```
 ```
 0x05 Sc_ignore_sleep <- <1> [enable: uint8_t]
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `enable`:
     0x00: disable sleep request ignoring (i.e. honor each sleep request)
@@ -97,7 +97,7 @@ the wake-on-command mechanism.
 
 ```
 0x06 Sc_get_gpio <- [void]
-  -> <3> [pin_sleep: uint8_t, pin_dip_1: uint8_t, pin_intb: uint8_t]
+  GET_REPORT -> <3> [pin_sleep: uint8_t, pin_dip_1: uint8_t, pin_intb: uint8_t]
   
   WHERE `pin_sleep`: SLEEP# pin (1 = high, 0 = low)
   WHERE `pin_dip_1`: DIP-switch pin (1 = high, 0 = low)
@@ -106,7 +106,7 @@ the wake-on-command mechanism.
 
 ```
 0x07 Sc_get_state <- [void]
-  -> <3> [wake_on_command: uint8_t, sleep_state: uint8_t, ignoring_sleep: uint8_t]
+  GET_REPORT -> <3> [wake_on_command: uint8_t, sleep_state: uint8_t, ignoring_sleep: uint8_t]
 
    WHERE `wake_on_command`: whether wake-on-command mechanism is active (1 = on, 0 = off)
    WHERE `sleep_state`: current sleep state
@@ -124,14 +124,14 @@ the wake-on-command mechanism.
 ### Group `0x1-`: controller configuration (`Cc`)
 ```
 0x10 Cc_get_id <- [void]
-  -> <1> [id_byte: uint8_t]
+  GET_REPORT -> <1> [id_byte: uint8_t]
   
   WHERE `id_byte`: embedded LED matrix driver ID
 ```
 
 ```
 0x11 Cc_set_global_brightness <- <1> [new_brightness: uint8_t]  
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `new_brightness`:
     0x00-0xFF: global brightness modulation value to be used
@@ -139,7 +139,7 @@ the wake-on-command mechanism.
 
 ```
 0x12 Cc_get_global_brightness <- [void]
-  -> <1> [current_brightness: uint8_t]
+  GET_REPORT -> <1> [current_brightness: uint8_t]
   
   WHERE `current_brightness`:
     0x00-0xFF: global brightness modulation value currently in use
@@ -147,7 +147,7 @@ the wake-on-command mechanism.
 
 ```
 0x13 Cc_get_dimensions <- [void]
-  -> <2> [width: uint8_t, height: uint8_t]
+  GET_REPORT -> <2> [width: uint8_t, height: uint8_t]
   
   WHERE `width`:
     0x00-0xFF: amount of usable LEDs in horizontal axis (9 for the official Framework LED Matrix)
@@ -169,7 +169,7 @@ the wake-on-command mechanism.
 
 ```
 0x20 Di_set_pixel <- <3> [x: uint8_t, y: uint8_t, value: uint8_t]
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `x`:
     0x00-0xFF: horizontal axis coordinate of the pixel to be set
@@ -183,7 +183,7 @@ the wake-on-command mechanism.
 
 ```
 0x21 Di_get_pixel <- <2> [x: uint8_t, y: uint8_t]
-  -> <1> [pixel_value: uint8_t]
+  GET_REPORT -> <1> [pixel_value: uint8_t]
   
   WHERE `x`:
     0x00-0xFF: horizontal axis coordinate of the pixel to retrieve
@@ -197,7 +197,7 @@ the wake-on-command mechanism.
 
 ```
 0x22 Di_draw_line <- <5> [x1: uint8_t, y1: uint8_t, x2: uint8_t y2: uint8_t, value: uint8_t]
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `x1`:
     0x00-0xFF: horizontal coordinates of the point at which line drawn starts
@@ -217,7 +217,7 @@ the wake-on-command mechanism.
   -> [void] _Noop
 ```
 
-## Feature Report `0x04` - `GLITTER_LARGE_REQ`
+## Feature Report `0x02` - `GLITTER_LARGE_REQ`
 
 ### Group `0x0-`: system control (`Sc`)
 There are no commands utilizing this feature request at the moment.
@@ -230,7 +230,7 @@ Requests in this group are ignored when wake-on-command mechanism is inactive
 and the current sleep state is not zero (see `Sc_get_state`).
 ```
 0x23 Di_draw_bitmap <- <306> [pixels: uint8_t*]
-  -> [void]
+  SET_REPORT -> [void]
   
   WHERE `pixels`:
     0x00-0xFF: an array of gray-scale intensity values 

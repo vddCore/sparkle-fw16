@@ -57,27 +57,30 @@ static const tusb_desc_device_t usbd_desc_device = {
 // ---/ HID ENDPOINT /------------------------------------------// 
 #define USBD_HID_EP             (0x83)
 #define USBD_HID_BUFSIZE          (16)
-#define USBD_HID_POLL_INTERVAL    (10)
-
-#define REPORT_ID_LED_MATRIX_SMALL_REQ (0x03)
-#define REPORT_ID_LED_MATRIX_LARGE_REQ (0x04)
+#define USBD_HID_POLL_INTERVAL    (1)
 
 #define USBD_LED_MATRIX_FEATURE_DESCRIPTOR                         \
     HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                    \
     HID_USAGE(0x01),                                               \
     HID_COLLECTION(HID_COLLECTION_APPLICATION),                    \
-        HID_REPORT_ID(REPORT_ID_LED_MATRIX_SMALL_REQ)              \
+        HID_REPORT_ID(REPORT_ID_GET_PROPERTIES)                    \
         HID_USAGE(0x02),                                           \
         HID_LOGICAL_MIN(0x00),                                     \
         HID_LOGICAL_MAX_N(0xFF, 2),                                \
         HID_REPORT_SIZE(8),                                        \
+        HID_REPORT_COUNT(32),                                      \
+        HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
+                                                                   \
+        HID_REPORT_ID(REPORT_ID_BASIC_CMD)                         \
+        HID_USAGE(0x03),                                           \
+        HID_REPORT_SIZE(8),                                        \
         HID_REPORT_COUNT(16),                                      \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
                                                                    \
-        HID_REPORT_ID(REPORT_ID_LED_MATRIX_LARGE_REQ)              \
-        HID_USAGE(0x03),                                           \
+        HID_REPORT_ID(REPORT_ID_GRID_CNTL)                         \
+        HID_USAGE(0x04),                                           \
         HID_REPORT_SIZE(8),                                        \
-        HID_REPORT_COUNT_N(384, 2),                                \
+        HID_REPORT_COUNT_N(306, 2),                                \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),       \
     HID_COLLECTION_END
 

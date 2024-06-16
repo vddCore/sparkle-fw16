@@ -13,6 +13,9 @@
 
 #include "firmware/kernel.h"
 
+#include <tusb.h>
+#include <device/usbd.h>
+
 static void kernel_i2c_init(kernel_context_t* kernel)
 {
     i2c_init(SPARKLE_I2C_INSTANCE, IS3741_I2C_FREQ);
@@ -47,11 +50,7 @@ kernel_context_t* kernel_init(void)
     
     if (!kernel)
     {
-        while (true)
-        {
-            log_error("Unable to allocate memory for context structure.");;
-            sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
-        }
+        kernel_panic("Unable to allocate memory for context structure.");
     }
 
     kernel_i2c_init(kernel);
@@ -59,24 +58,11 @@ kernel_context_t* kernel_init(void)
     if (kernel_led_matrix_init(kernel) < 0)
     {
         free(kernel);
-
-        while (true)
-        {
-            log_error("Unable to initialize LED matrix.");
-            sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
-        }
+        kernel_panic("Unable to initialize LED matrix.");
     }
 
+    tusb_init();
     return kernel;
-}
-
-_Noreturn void kernel_panic(const char* why)
-{
-    while (true)
-    {
-        log_error("PANIC! %s", why);
-        sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
-    }
 }
 
 void kernel_exit(kernel_context_t* kernel)
@@ -90,11 +76,24 @@ void kernel_exit(kernel_context_t* kernel)
     free(kernel);
 }
 
+_Noreturn void kernel_panic(const char* why)
+{
+    while (true)
+    {
+        log_error("PANIC! %s", why);
+        sleep_ms(SPARKLE_PANIC_SLEEP_INTERVAL_MS);
+    }
+}
+
 _Noreturn void kernel_main(kernel_context_t* kernel)
 {    
     log_info("Entering main system loop.");
     
     while (true)
     {
+        tud_task();
+        tud_task();
+        tud_task();
+        tud_task();
     }
 }

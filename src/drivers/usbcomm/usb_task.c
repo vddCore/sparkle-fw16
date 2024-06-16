@@ -118,7 +118,7 @@ bool usb_task_init(void)
 
 bool usb_task_is_initialized(void)
 {
-    return is_initialized;
+    return true;
 }
 
 bool usb_task_set_rx_callback(uint8_t itf, usb_rx_callback_t cb, void* parameter)

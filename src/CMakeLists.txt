@@ -1,4 +1,6 @@
 ﻿add_executable(${PROJECT_NAME}
+    main.c
+    firmware/kernel.c
     drivers/is3741.c
     drivers/led_matrix_lut.c
     drivers/led_matrix.c
@@ -8,8 +10,6 @@
     drivers/usbcomm/usb_control.c
     drivers/usbcomm/usb_task.c
     drivers/pins.c
-    firmware/kernel.c
-    main.c
 )
 
 target_link_libraries(${PROJECT_NAME}
