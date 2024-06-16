@@ -6,8 +6,7 @@
 void pins_init(void)
 {
     gpio_set_function(PIN_GPIO_SDB, GPIO_FUNC_SIO);
-    gpio_set_outover(PIN_GPIO_SDB, GPIO_OVERRIDE_HIGH);
-    gpio_set_oeover(PIN_GPIO_SDB, GPIO_OVERRIDE_HIGH);
+    gpio_pull_down(PIN_GPIO_SDB);
     gpio_set_dir(PIN_GPIO_SDB, true);
 
     gpio_set_function(PIN_GPIO_SLEEP, GPIO_FUNC_SIO);

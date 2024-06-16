@@ -130,10 +130,6 @@ subsequent bytes are used as command arguments where applicable.
 > y = x1y1 & 0xFF;
 > ```
 
-> **`0x07` - `GLITTER_CMD_CTRLR_RESET(void)`**  
-> Resets the IS31FL3741A controller to its default boot state.
-
-
 ## Feature Report `0x03` - `GLITTER_GRID_PWM_CNTL`
 This report takes a sequence of 306 bytes representing the entire pixel grid's 
 brightness values.

@@ -22,8 +22,7 @@ typedef enum glitter_basic_command
     GLITTER_CMD_SET_SLEEP_TIMEOUT     = 0x03,
     GLITTER_CMD_SET_GLOBAL_BRIGHTNESS = 0x04,
     GLITTER_CMD_DRAW_PIXEL            = 0x05,
-    GLITTER_CMD_DRAW_LINE             = 0x06,
-    GLITTER_CMD_CTRLR_RESET           = 0x07
+    GLITTER_CMD_DRAW_LINE             = 0x06
 } __attribute__((packed)) glitter_basic_command_t;
 
 typedef enum glitter_cmd_reboot_target

@@ -12,22 +12,28 @@
 
 #include "firmware/kernel.h"
 
-static int32_t kernel_led_matrix_init(kernel_context_t* kernel)
+#include <firmware/services/srv_sleep.h>
+
+#include "firmware/services/srv_timeout.h"
+
+static kernel_context_t _kernel = { 0 };
+
+static int32_t kernel_led_matrix_init(void)
 {
-    int32_t result = (int32_t)is3741_init(IS3741_I2C_ADDR, &kernel->is3741);
+    int32_t result = (int32_t)is3741_init(IS3741_I2C_ADDR, &_kernel.is3741);
 
 #if LED_MATRIX_USE_EVT_LUT
-        if (!result) result = (int32_t)is3741_set_sws_config(kernel->is3741, IS3741_SWS_SW1SW9);
+    if (!result) result = (int32_t)is3741_set_sws_config(kernel->is3741, IS3741_SWS_SW1SW9);
 #else
-    if (!result) result = (int32_t)is3741_set_sws_config(kernel->is3741, IS3741_SWS_SW1SW8);
+    if (!result) result = (int32_t)is3741_set_sws_config(_kernel.is3741, IS3741_SWS_SW1SW8);
 #endif
 
-    if (!result) result = is3741_set_led_dc_scale_global(kernel->is3741, IS3741_DC_SCALE_DEFAULT);
-    if (!result) result = is3741_set_pwm_freq(kernel->is3741, IS3741_PFS_29000HZ);
-    
+    if (!result) result = is3741_set_led_dc_scale_global(_kernel.is3741, IS3741_DC_SCALE_DEFAULT);
+    if (!result) result = is3741_set_pwm_freq(_kernel.is3741, IS3741_PFS_29000HZ);
+
     if (!result)
     {
-        led_matrix_set_controller(kernel->is3741);
+        led_matrix_set_controller(_kernel.is3741);
         led_matrix_clear();
     }
 
@@ -37,31 +43,13 @@ static int32_t kernel_led_matrix_init(kernel_context_t* kernel)
 
 kernel_context_t* kernel_init(void)
 {
-    kernel_context_t* kernel = (kernel_context_t*)calloc(1, sizeof(kernel_context_t));
-    
-    if (!kernel)
+    if (kernel_led_matrix_init() < 0)
     {
-        kernel_panic("Unable to allocate memory for context structure.");
-    }
-
-    if (kernel_led_matrix_init(kernel) < 0)
-    {
-        free(kernel);
         kernel_panic("Unable to initialize LED matrix.");
     }
 
-    return kernel;
-}
-
-void kernel_exit(kernel_context_t* kernel)
-{
-    if (!kernel)
-    {
-        log_warn("Attempt to destroy a NULL kernel context.");
-        return;
-    }
-
-    free(kernel);
+    srv_timeout_add_event_handler(&srv_sleep_idle_timeout_handler);
+    return &_kernel;
 }
 
 _Noreturn void kernel_panic(const char* why)
@@ -73,11 +61,13 @@ _Noreturn void kernel_panic(const char* why)
     }
 }
 
-_Noreturn void kernel_main(kernel_context_t* kernel)
-{    
+_Noreturn void kernel_main(void)
+{
     log_info("Entering main system loop.");
-    
+
     while (true)
     {
+        srv_timeout_task(&_kernel);
+        srv_sleep_monitor_ec_task(&_kernel);
     }
 }

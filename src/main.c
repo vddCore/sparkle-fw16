@@ -1,5 +1,4 @@
 ﻿#include <drivers/usbcomm/usb_control.h>
-#include <pico/time.h>
 
 #include "drivers/usbcomm/usb_task.h"
 #include "drivers/usbcomm/usb_stdio.h"
@@ -13,20 +12,15 @@ int main(void)
     
     usb_task_init();
     usb_stdio_init();
-
-    while (!usb_stdio_connected())
-    {
-        sleep_ms(10);
-    }
     
     kernel_context_t* kernel = kernel_init();
     usb_control_init(kernel);
     
-    kernel_main(kernel);
+    kernel_main();
 
     /*
      * Execution should never reach this point.
      */
-    kernel_exit(kernel);
+    kernel_panic("Control flow somehow escaped kernel_main.");
     return 0;
 }
