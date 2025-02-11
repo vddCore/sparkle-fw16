@@ -41,7 +41,7 @@ directory.
 When Sparkle starts up it initializes 3 interfaces:
 1. USB CDC interface for debugging purposes. All messages are logged there.
 2. USB HID interface for control purposes. API requests are sent there.
-3. RP2040 Reset interface for easy flashing. The modified Sparkle Picotool makes use of this.
+3. RP2040 Reset interface for easy flashing. The modified [Sparkle Picotool](https://github.com/vddCore/sparkle-fw16-picotool/releases/tag/1.3.0) makes use of this.
 
 # Glitter Protocol v1.0
 The Glitter Protocol is how Sparkle talks to your Framework Laptop 16 and vice-versa.
