@@ -1,6 +1,9 @@
 ﻿#ifndef GLITTER_H
 #define GLITTER_H
 
+#define GLITTER_VERSION_MAJOR 1
+#define GLITTER_VERSION_MINOR 0
+
 typedef struct glitter_device_info
 {
     uint8_t sleep_pin;         /* 1 = on, 0 = off */
@@ -13,6 +16,8 @@ typedef struct glitter_device_info
     uint8_t display_width;     /* 9 for the official LED matrix module */
     uint8_t display_height;    /* 34 for the official LED matrix module */
     int32_t timeout_ms;
+    uint8_t version_major;
+    uint8_t version_minor;
 } __attribute__((packed)) glitter_device_info_t;
 
 typedef enum glitter_basic_command
