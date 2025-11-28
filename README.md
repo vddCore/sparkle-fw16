@@ -43,6 +43,9 @@ When Sparkle starts up it initializes 3 interfaces:
 2. USB HID interface for control purposes. API requests are sent there.
 3. RP2040 Reset interface for easy flashing. The modified [Sparkle Picotool](https://github.com/vddCore/sparkle-fw16-picotool/releases/tag/1.3.0) makes use of this.
 
+# How can I drive it?
+Reference implementation for a Sparkle-compatible driver and renderer is available [here](https://github.com/vddCore/Starlight.Framework).
+
 # Glitter Protocol v1.0
 The Glitter Protocol is how Sparkle talks to your Framework Laptop 16 and vice-versa.
 
