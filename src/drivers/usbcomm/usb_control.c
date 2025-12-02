@@ -25,7 +25,9 @@ static glitter_device_info_t _devinfo = {
      * them again.
      **/
     .display_width = LED_MATRIX_WIDTH,
-    .display_height = LED_MATRIX_HEIGHT
+    .display_height = LED_MATRIX_HEIGHT,
+    .version_major = GLITTER_VERSION_MAJOR,
+    .version_minor = GLITTER_VERSION_MINOR,
 };
 
 static void handle_basic_command(const uint8_t* buffer, uint16_t uint16)

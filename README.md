@@ -70,12 +70,15 @@ typedef struct glitter_device_info
     uint8_t global_brightness;
     uint8_t display_width;     /* 9 for the official LED matrix module */
     uint8_t display_height;    /* 34 for the official LED matrix module */
+    uint8_t version_major;
+    uint8_t version_minor;
 } glitter_device_info_t;
 ```
 
 ## Feature Report `0x02` - `GLITTER_BASIC_CMD`
 Executes a user-accessible firmware subroutine. First byte specifies command ID, while
-subsequent bytes are used as command arguments where applicable.
+subsequent bytes are used as command arguments where applicable. Pad to exactly 16 bytes,
+including the command ID.
 
 > **`0x00` - `GLITTER_CMD_REBOOT(target: uint8_t)`**  
 > Reboots the microcontroller into the specified target state.  
